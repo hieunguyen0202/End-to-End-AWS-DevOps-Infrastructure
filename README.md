@@ -50,6 +50,8 @@
     - AmazonDynamoDBFullAccess
     - AmazonVPCFullAccess
     - AmazonEC2FullAccess
+    - SecretsManagerReadWrite
+    - AmazonRDSFullAccess
 
 
 - Go to AWS Console and create new Bucket Name `aws-infra-03-terraform-state`
