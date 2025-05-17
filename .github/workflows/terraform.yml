@@ -16,8 +16,6 @@ env:
  # Credentials for deployment to AWS
  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
- # S3 bucket for the Terraform state
- BUCKET_TF_STATE: ${{ secrets.BUCKET_TF_STATE}}
  AWS_REGION: ap-southeast-1
 
 jobs:
@@ -40,7 +38,7 @@ jobs:
 
        - name: Terraform init
          id: init
-         run: terraform init -backend-config="bucket=$BUCKET_TF_STATE"
+         run: terraform init 
 
        - name: Terraform format
          id: fmt
