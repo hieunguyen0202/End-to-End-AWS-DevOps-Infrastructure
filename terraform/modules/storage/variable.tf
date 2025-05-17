@@ -122,8 +122,3 @@ variable "rabbitmq_subnet_id" {
   type        = string
 }
 
-variable "project_tag" {
-  description = "Project tag to apply to resources"
-  type        = string
-  default     = "AWS-Infra-03-RDSCacheMQBeanstalkInfra" 
-}
