@@ -15,7 +15,7 @@ module "network" {
 }
 
 module "security" {
-  source           = "../modules/security"
+  source           = "../../modules/security"
   vpc_id           = module.network.vpc_id
   public_sg_name   = var.public_sg_name
   private_sg_name  = var.private_sg_name
