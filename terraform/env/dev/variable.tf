@@ -1,20 +1,33 @@
 variable "region" {
   type = string
 }
-// Backend S3 setup
 
-variable "bucket_name" {
-  description = "Name of the S3 bucket for Terraform state"
-  type        = string
+# Variables from security module
+
+variable "vpc_name" {
+  type = string
 }
 
-variable "dynamodb_table_name" {
-  description = "Name of the DynamoDB table for state locking"
-  type        = string
-  default     = "terraform-lock-table"
+variable "cidr_block" {
+  type = string
 }
 
-variable "environment" {
-  description = "Environment (dev, prod, etc.)"
-  type        = string
+variable "public_subnets" {
+  type = list(string)
+}
+
+variable "private_subnets" {
+  type = list(string)
+}
+
+variable "public_subnet_names" {
+  type = list(string)
+}
+
+variable "private_subnet_names" {
+  type = list(string)
+}
+
+variable "availability_zones" {
+  type = list(string)
 }
