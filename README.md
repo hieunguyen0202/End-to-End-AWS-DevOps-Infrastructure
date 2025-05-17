@@ -52,6 +52,7 @@
     - AmazonEC2FullAccess
     - SecretsManagerReadWrite
     - AmazonRDSFullAccess
+    - AdministratorAccess-AWSElasticBeanstalk
 
 
 - Go to AWS Console and create new Bucket Name `aws-infra-03-terraform-state`
@@ -143,6 +144,60 @@
 
 
 ### Setup application deploy with Elastic BeanStalk
+
+- Create EC2 role with name `aws-infra-03-beanstalk-role` and attach some policy below:
+    - AWSElasticBeanstalkEnhancedHeath
+    - AWSElasticBeanstalkWebTier
+    - AWSElasticBeanstalkRoleSNS
+    - AWSElasticBeanstalkCustomPlatformforEC2Role
+    - AdministratorAccess-AWSElasticBeanstalk
+- Create application -> Choose Web server environment 
+- Give application name `aws-infra-03-beanstalk-app`
+- Give Environment name `aws-infra-03-beanstalk-env-dev`
+- Choose domain `aws-infra-03-vprofile`
+- Choose Platform type `Managed platform` -> Choose `Tomcat` -> Choose plarform branch `Tomcat 8.5` -> Choose platform version `4.3.10`
+- Choose sample application code
+- For Presets -> Choose `Custom configuration`
+- For service role -> Create and use new service role with name `aws-infra-03-beanstalk-service-role` 
+- For EC2 key pair, using same key from output in terraform/modules/bastion/output.tf
+- For EC2 instance profile -> Choose existing EC2 role with name `aws-infra-03-beanstalk-role`
+- For VPC, choose `aws-infra-03-vpc`, also choose Public IP address Activated and add private subnet `aws-infra-03-private-subnet-1` `aws-infra-03-private-subnet-2`
+- Add tag `project : AWS-Infra-03-RDSCacheMQBeanstalkInfra`
+- Choose exisiting security group `aws-infra-03-private-sg`
+- Choose Auto scaling Group with type `Load balanced` 
+    - Min 1 instances
+    - Max 2 instances
+    - Fleet composition `On-demand instances`
+    - Archiitecture `x86_64`
+    - Instance Type `t3.micro`
+    - Choose AMI ID `ami-0c1907b6d738188e5` 
+- For scaling triggers 
+    - Metric: NetworkOut
+    - Statistic: Average
+    - Unit: Bytes
+    - Period: 5 Min
+    - Breach duration 5 Min
+    - Upper threshold: 6000000
+    
+- For loadbalancer subnet, attach to `aws-infra-03-public-subnet-1` 
+- Loadbalancer Type `Application Load Balancer` with `Dedicated`
+- For listeners:
+    - Port: `80`
+    - Protocol: `HTTP`
+    - Health check path : 80, HTTP, path `/login` and enable session stickiness
+    - Add another listener, port 443, HTTPs, choose exsiting SSL Certificate ARN `arn:aws:acm:ap-southeast-1:143735903781:certificate/5ad129c2-f6e9-4840-be04-1ada1ae393da`
+
+- Application deployments
+    - Policy `Rolling`
+    - Batch size `Percentage`, with `50%` at a time
+
+
+
+
+
+
+
+
 
 
 ### Setup S3 bucket and S3 Endpoint Gateway
