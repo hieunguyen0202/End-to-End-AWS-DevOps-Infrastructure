@@ -55,6 +55,7 @@ resource "aws_elasticache_subnet_group" "elasticache_subnet_grp" {
   }
 }
 
+
 resource "aws_elasticache_parameter_group" "elasticache_param_grp" {
   name   = var.elasticache_parameter_group_name
   family = "memcached1.6"
