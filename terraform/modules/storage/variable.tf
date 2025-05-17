@@ -33,5 +33,6 @@ variable "availability_zones" {
 }
 
 variable "security_group_id" {
+  type        = string
   description = "Existing security group ID for the RDS instance"
 }

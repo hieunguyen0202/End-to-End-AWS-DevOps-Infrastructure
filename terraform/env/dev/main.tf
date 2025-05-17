@@ -30,7 +30,7 @@ data "aws_secretsmanager_secret_version" "db_password" {
 module "storage" {
   source             = "../../modules/storage"
   availability_zones = var.availability_zones
-  subnet_ids         = module.network.aws_subnet_private_id[1]
+  subnet_ids         = module.network.aws_subnet_private_id
   security_group_id  = module.security.database_security_group_id
   db_password        = data.aws_secretsmanager_secret_version.db_password.secret_string
 
