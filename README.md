@@ -78,6 +78,10 @@
 
 ### Setup Security Group and KeyPair
 
+- Public-sg (Allow internet port 80/443) `aws-infra-03-public-sg`
+- Private-sg (Allow port 3000,8080 from public-sg) `aws-infra-03-private-sg`
+- bastion-sg `aws-infra-03-bastion-sg`
+- database-sg (Allow port 27017 from Private-sg, bastion-sg) `aws-infra-03-database-sg`
 
 ### Setup RDS database module
 
