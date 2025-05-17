@@ -48,6 +48,9 @@
 - Create IAM user with name `AWS-Infra-03-IAM-User` and grant role below
     - AmazonS3FullAccess
     - AmazonDynamoDBFullAccess
+    - AmazonVPCFullAccess
+    - AmazonEC2FullAccess
+
 
 - Go to AWS Console and create new Bucket Name `aws-infra-03-terraform-state`
 
