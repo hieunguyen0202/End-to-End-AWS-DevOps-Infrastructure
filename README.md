@@ -1,3 +1,3 @@
 # AWS-Infra-03-RDSCacheMQBeanstalkInfra
 
-![Uploading AWS-Infra-03-RDSCacheMQBeanstalkInfra.drawio.png…]()
+![alt text](AWS-Infra-03-RDSCacheMQBeanstalkInfra.drawio.svg)
