@@ -71,6 +71,7 @@ resource "aws_eip" "nat" {
   }
 }
 
+
 # Create NAT Gateway in public subnet 1
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat.id
