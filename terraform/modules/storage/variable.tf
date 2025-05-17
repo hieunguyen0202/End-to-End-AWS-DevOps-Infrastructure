@@ -36,3 +36,53 @@ variable "security_group_id" {
   type        = string
   description = "Existing security group ID for the RDS instance"
 }
+
+// Memcached Elasticache cluster
+
+variable "elasticache_subnet_group_name" {
+  description = "Name for the ElastiCache subnet group"
+  default     = "aws-infra-03-elasticecache-sub-grp"
+  type        = string
+}
+
+variable "elasticache_parameter_group_name" {
+  description = "Name for the ElastiCache parameter group"
+  type        = string
+  default     = "aws-infra-03-elasticecache-para-grp"
+}
+
+variable "elasticache_cluster_id" {
+  description = "Cluster ID (name) of the ElastiCache cluster"
+  type        = string
+  default     = "aws-infra-03-elasticecache-svc"
+}
+
+variable "elasticache_engine_version" {
+  description = "Engine version of ElastiCache Memcached"
+  type        = string
+  default     = "1.6.17"
+}
+
+variable "elasticache_node_type" {
+  description = "Node type for ElastiCache"
+  type        = string
+  default     = "cache.t2.micro"
+}
+
+variable "elasticache_node_count" {
+  description = "Number of cache nodes"
+  type        = number
+  default     = 1
+}
+
+variable "elasticache_port" {
+  description = "Port for ElastiCache"
+  type        = number
+  default     = 11211
+}
+
+variable "project_tag" {
+  description = "Project tag for resources"
+  type        = string
+  default     = "AWS-Infra-03-RDSCacheMQBeanstalkInfra"
+}

@@ -57,10 +57,10 @@ jobs:
        - name: Terraform plan status
          if: steps.plan.outcome == 'failure' 
          run: exit 1
-       - name: Terraform action (apply or destroy)
-         if: env.TF_ACTION == 'create'
-         run: terraform apply -input=false planfile
+      #  - name: Terraform action (apply or destroy)
+      #    if: env.TF_ACTION == 'create'
+      #    run: terraform apply -input=false planfile
 
-       - name: Terraform destroy
-         if: env.TF_ACTION == 'destroy'
-         run: terraform destroy -auto-approve
+      #  - name: Terraform destroy
+      #    if: env.TF_ACTION == 'destroy'
+      #    run: terraform destroy -auto-approve

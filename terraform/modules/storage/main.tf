@@ -41,3 +41,43 @@ resource "aws_db_instance" "rds" {
     Name = var.db_identifier
   }
 }
+
+
+// Memcached Elasticache cluster
+
+resource "aws_elasticache_subnet_group" "elasticache_subnet_grp" {
+  name       = var.elasticache_subnet_group_name
+  subnet_ids = var.subnet_ids
+
+  tags = {
+    Name    = var.elasticache_subnet_group_name
+    project = var.project_tag
+  }
+}
+
+resource "aws_elasticache_parameter_group" "elasticache_param_grp" {
+  name   = var.elasticache_parameter_group_name
+  family = "memcached1.6"
+
+  tags = {
+    project = var.project_tag
+  }
+}
+
+resource "aws_elasticache_cluster" "memcached" {
+  cluster_id           = var.elasticache_cluster_id
+  engine               = "memcached"
+  engine_version       = var.elasticache_engine_version
+  node_type            = var.elasticache_node_type
+  num_cache_nodes      = var.elasticache_node_count
+  port                 = var.elasticache_port
+  parameter_group_name = aws_elasticache_parameter_group.elasticache_param_grp.name
+  subnet_group_name    = aws_elasticache_subnet_group.elasticache_subnet_grp.name
+  security_group_ids   = [var.security_group_id]
+
+  tags = {
+    Name    = var.elasticache_cluster_id
+    project = var.project_tag
+  }
+}
+

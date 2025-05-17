@@ -112,8 +112,8 @@
 - Create subnet group `aws-infra-03-elasticecache-sub-grp` and attach to `aws-infra-03-vpc`
 - Create parameter group with name `aws-infra-03-elasticecache-para-grp`
 - Choose family `memcached1.6`
-- Add tag `project : AWS-Infra-03-RDSCacheMQBeanstalkInfra`
-- Create memcached Cluster -> Choose Standard Create -> Location `AWS Cloud`
+- Create Memcached Cluster -> Choose Deployment option `Design your own cache` 
+- Creation method `Cluster cache` and Location `AWS Cloud`
 - And give a name `aws-infra-03-elasticecache-svc`
 - Choose Engine version `1.6.17` and port `11211`
 - Choose and assign for `aws-infra-03-elasticecache-para-grp`
@@ -122,8 +122,7 @@
 - Choose existing subnet group `aws-infra-03-elasticecache-sub-grp`
 - Choose exsiting Security Group `aws-infra-03-database-sg`
 - No preference for maintenance window
-
-
+- Add tag `project : AWS-Infra-03-RDSCacheMQBeanstalkInfra`
 
 
 ### Setup Amazon MQ
