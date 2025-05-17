@@ -158,6 +158,7 @@
 - Give Environment name `aws-infra-03-beanstalk-env-dev`
 - Choose domain `aws-infra-03-vprofile`
 - Choose Platform type `Managed platform` -> Choose `Tomcat` -> Choose plarform branch `Tomcat 11` -> Choose platform version `5.6.1`
+- Do this command to choose correct platform name `aws elasticbeanstalk list-available-solution-stacks`
 - Choose sample application code
 - For Presets -> Choose `Custom configuration`
 - For service role -> Create and use new service role with name `aws-infra-03-beanstalk-service-role` 

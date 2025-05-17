@@ -93,7 +93,7 @@ resource "aws_mq_broker" "rabbitmq" {
   publicly_accessible       = false
   subnet_ids                = [var.rabbitmq_subnet_id]
   security_groups           = [var.security_group_id]
-  auto_minor_version_upgrade = false
+  auto_minor_version_upgrade = true  
 
   user {
     username = var.rabbitmq_username
