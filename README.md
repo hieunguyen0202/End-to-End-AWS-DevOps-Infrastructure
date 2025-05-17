@@ -52,7 +52,9 @@
     - AmazonEC2FullAccess
     - SecretsManagerReadWrite
     - AmazonRDSFullAccess
+    - IAMFullAccess
     - AdministratorAccess-AWSElasticBeanstalk
+    - AWSCertificateManagerFullAccess
 
 
 - Go to AWS Console and create new Bucket Name `aws-infra-03-terraform-state`

@@ -89,7 +89,7 @@ resource "aws_security_group" "database_sg" {
   description = "Allow MongoDB from private and bastion SGs"
   vpc_id      = var.vpc_id
 
-    # Allow from private SG
+  # Allow from private SG
   ingress {
     description     = "Allow from private SG"
     from_port       = 0
