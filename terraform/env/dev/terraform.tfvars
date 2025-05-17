@@ -23,8 +23,8 @@ instance_name = "aws-infra-01-bastion-vm"
 volume_size   = 10
 
 
-app_name        = "aws-infra-03-beanstalk-app"
-env_name        = "aws-infra-03-beanstalk-env-dev"    
+app_name        = "aws-infra-03-beanstalk-application"
+env_name        = "aws-infra-03-beanstalk-environment-dev"    
 project_tag     = "AWS-Infra-03-RDSCacheMQBeanstalkInfra" 
 ec2_role_name     = "aws-infra-03-beanstalk-role"
 instance_profile_name     = "aws-infra-03-beanstalk-role" 

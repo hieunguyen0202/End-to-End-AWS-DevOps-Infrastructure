@@ -131,7 +131,7 @@ resource "aws_security_group" "database_sg" {
 // Secrets Manager for Password RDS
 
 resource "aws_secretsmanager_secret" "rds_password" {
-  name = "aws-infra-03-rds-password"
+  name = "aws-infra-03-rds-password-1"
   description = "RDS master password for MySQL"
 }
 
@@ -143,7 +143,7 @@ resource "aws_secretsmanager_secret_version" "rds_password_version" {
 // Secrets Manager for Amamzon MQ
 
 resource "aws_secretsmanager_secret" "rmq_password" {
-  name = "aws-infra-03-rmq-password"
+  name = "aws-infra-03-rmq-password-1"
   description = "Password for Amamzon MQ"
 }
 
