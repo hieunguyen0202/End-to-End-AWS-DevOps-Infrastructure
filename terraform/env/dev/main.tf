@@ -30,7 +30,7 @@ module "storage" {
   subnet_ids                    = module.network.aws_subnet_private_id
   security_group_id             = module.security.database_security_group_id
   db_password                   = module.security.rds_password_secret_string
-  rabbitmq_password_secret_name = module.security.rmq_password_secret_string
+  rabbitmq_password             = module.security.rmq_password_secret_string
   rabbitmq_subnet_id            = module.network.aws_subnet_private_id[0] 
 
 }

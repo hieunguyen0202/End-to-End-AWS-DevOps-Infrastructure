@@ -106,9 +106,10 @@ variable "rabbitmq_username" {
   default     = "rabbit"
 }
 
-variable "rabbitmq_password_secret_name" {
+variable "rabbitmq_password" {
   description = "Name of the AWS Secrets Manager secret storing RabbitMQ password"
   type        = string
+  sensitive   = true
 }
 
 variable "rabbitmq_engine_version" {
@@ -121,4 +122,3 @@ variable "rabbitmq_subnet_id" {
   description = "Subnet ID for RabbitMQ broker"
   type        = string
 }
-

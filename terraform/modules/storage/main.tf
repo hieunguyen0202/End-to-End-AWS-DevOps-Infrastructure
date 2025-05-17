@@ -97,7 +97,7 @@ resource "aws_mq_broker" "rabbitmq" {
 
   user {
     username = var.rabbitmq_username
-    password = data.aws_secretsmanager_secret_version.rabbitmq_password.secret_string
+    password = var.rabbitmq_password
   }
 
   logs {
