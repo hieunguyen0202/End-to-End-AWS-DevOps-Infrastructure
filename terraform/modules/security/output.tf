@@ -20,3 +20,7 @@ output "rds_password_secret_name" {
   value       = aws_secretsmanager_secret.rds_password.name
   description = "Name of the RDS password secret"
 }
+
+output "rds_password_secret_string" {
+  value = aws_secretsmanager_secret_version.rds_password_version.secret_string
+}
