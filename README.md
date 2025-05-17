@@ -89,6 +89,21 @@
 - Create DB subnet group `aws-infra-03-rds-sub-grp`
 - Add availability zone ["ap-southeast-1a", "ap-southeast-1c"]
 - Add RDS to Subnets `aws-infra-03-public-subnet-1`
+- Create parameter group with name `aws-infra-03-para-grp`
+- Create database -> Standard Database -> MySQL -> Engine Version `8.0.41` -> Template `Free Tier` -> Choose `Single DB instance`
+- Give a name `aws-infra-03-rds-mysql-db`
+- Master username `admin`
+- Store Password in AWS Secret Manager in security module with password `strong_password`
+- In instance configuration `Burstable classes` and choose  `db.t3.micro`
+- Storge type `gp2`
+- Allocated Storage `20GiB`
+- Choose Don't connect to an EC2 compute
+- Network type IPv4m choose this `aws-infra-03-vpc` and assign for DB subnet group `aws-infra-03-rds-sub-grp`
+- Choose exsiting Security Group `aws-infra-03-database-sg`
+- Choose Database port `3306`
+- Database authentication `Password authentication`
+- Choose `General log`
+
 
 ### Setup Elastice Cache
 

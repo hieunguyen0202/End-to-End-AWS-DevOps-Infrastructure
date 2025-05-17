@@ -1,15 +1,37 @@
-variable "bucket_name" {
-  description = "Name of the S3 bucket for Terraform state"
-  type        = string
+variable "db_identifier" {
+  default = "aws-infra-03-rds-mysql-db"
 }
 
-variable "dynamodb_table_name" {
-  description = "Name of the DynamoDB table for state locking"
-  type        = string
-  default     = "terraform-lock-table"
+variable "db_name" {
+  default = "mydatabase"
 }
 
-variable "environment" {
-  description = "Environment (dev, prod, etc.)"
-  type        = string
+variable "db_username" {
+  default = "admin"
+}
+
+variable "db_password" {
+  description = "Password for RDS"
+  sensitive   = true
+}
+
+variable "db_subnet_group_name" {
+  default = "aws-infra-03-rds-sub-grp"
+}
+
+variable "db_parameter_group_name" {
+  default = "aws-infra-03-para-grp"
+}
+
+variable "subnet_ids" {
+  type = list(string)
+}
+
+variable "availability_zones" {
+  type    = list(string)
+  default = ["ap-southeast-1a", "ap-southeast-1c"]
+}
+
+variable "security_group_id" {
+  description = "Existing security group ID for the RDS instance"
 }

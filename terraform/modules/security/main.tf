@@ -127,3 +127,15 @@ resource "aws_security_group" "database_sg" {
     Name = var.database_sg_name
   }
 }
+
+// Secrets Manager for Password RDS
+
+resource "aws_secretsmanager_secret" "rds_password" {
+  name = "aws-infra-03-rds-password"
+  description = "RDS master password for MySQL"
+}
+
+resource "aws_secretsmanager_secret_version" "rds_password_version" {
+  secret_id     = aws_secretsmanager_secret.rds_password.id
+  secret_string = "strong_password"
+}

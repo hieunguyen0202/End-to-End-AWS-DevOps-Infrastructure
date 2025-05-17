@@ -49,3 +49,17 @@ variable "bastion_sg_name" {
 variable "database_sg_name" {
   type = string
 }
+
+
+variable "subnet_ids" {
+  type = list(string)
+}
+
+variable "security_group_id" {
+  description = "Existing security group ID for the RDS instance"
+}
+
+variable "db_password" {
+  description = "Password for RDS"
+  sensitive   = true
+}
