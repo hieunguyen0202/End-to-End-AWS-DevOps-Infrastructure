@@ -50,7 +50,3 @@ variable "database_sg_name" {
   type = string
 }
 
-variable "db_password" {
-  description = "Password for RDS"
-  sensitive   = true
-}
