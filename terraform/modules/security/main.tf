@@ -115,6 +115,7 @@ resource "aws_security_group" "database_sg" {
     protocol        = "tcp"
     self            = true
   }
+  
 
   egress {
     from_port   = 0

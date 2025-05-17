@@ -85,6 +85,11 @@
 
 ### Setup RDS database module
 
+- Create RDS database
+- Create DB subnet group `aws-infra-03-rds-sub-grp`
+- Add availability zone ["ap-southeast-1a", "ap-southeast-1c"]
+- Add RDS to Subnets `aws-infra-03-public-subnet-1`
+
 ### Setup Elastice Cache
 
 ### Setup Amazon MQ
