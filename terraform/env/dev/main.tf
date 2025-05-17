@@ -33,7 +33,6 @@ module "storage" {
   subnet_ids         = module.network.aws_subnet_private_id
   security_group_id  = module.security.database_security_group_id
   db_password        = module.security.rds_password_secret_string
-
 }
 
 

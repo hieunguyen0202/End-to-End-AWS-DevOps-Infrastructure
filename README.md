@@ -90,7 +90,7 @@
 - Create RDS database
 - Create DB subnet group `aws-infra-03-rds-sub-grp`
 - Add availability zone ["ap-southeast-1a", "ap-southeast-1c"]
-- Add RDS to Subnets `aws-infra-03-public-subnet-1`
+- Add RDS to Subnets `aws-infra-03-private-subnet-1`
 - Create parameter group with name `aws-infra-03-para-grp`
 - Create database -> Standard Database -> MySQL -> Engine Version `8.0.41` -> Template `Free Tier` -> Choose `Single DB instance`
 - Give a name `aws-infra-03-rds-mysql-db`
@@ -108,6 +108,23 @@
 
 
 ### Setup Elastice Cache
+
+- Create subnet group `aws-infra-03-elasticecache-sub-grp` and attach to `aws-infra-03-vpc`
+- Create parameter group with name `aws-infra-03-elasticecache-para-grp`
+- Choose family `memcached1.6`
+- Add tag `project : AWS-Infra-03-RDSCacheMQBeanstalkInfra`
+- Create memcached Cluster -> Choose Standard Create -> Location `AWS Cloud`
+- And give a name `aws-infra-03-elasticecache-svc`
+- Choose Engine version `1.6.17` and port `11211`
+- Choose and assign for `aws-infra-03-elasticecache-para-grp`
+- Choose Node type `cache.t2.micro`
+- Choose number of nodes : `1`
+- Choose existing subnet group `aws-infra-03-elasticecache-sub-grp`
+- Choose exsiting Security Group `aws-infra-03-database-sg`
+- No preference for maintenance window
+
+
+
 
 ### Setup Amazon MQ
 

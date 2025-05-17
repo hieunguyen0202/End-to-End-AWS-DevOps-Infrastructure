@@ -17,7 +17,7 @@ env:
  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
  AWS_REGION: ap-southeast-1
- TF_ACTION: ${{ secrets.TF_ACTION || 'create' }} # Default to create if not set
+ TF_ACTION: ${{ secrets.TF_ACTION || 'destroy' }} # Default to create if not set
 
 
 jobs:
