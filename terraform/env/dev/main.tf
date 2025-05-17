@@ -47,7 +47,6 @@ module "bastion" {
 
 module "beanstalk_elb" {
   source                = "../../modules/beanstalk-elb"
-
   app_name              = var.app_name                         
   env_name              = var.env_name                    
   project_tag           = var.project_tag                      
