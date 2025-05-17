@@ -35,7 +35,7 @@ module "storage" {
 }
 
 module "bastion" {
-  source                 = "../modules/bastion"
+  source                 = "../../modules/bastion"
   ami_id                 = var.ami_id
   instance_type          = var.instance_type
   key_name               = var.key_name
