@@ -42,6 +42,8 @@
 
 ## Step 1: Automate IaC with Terraform
 
+## Setup Terraform Environment with diffent stage and S3 backend storage
+
 ### Setup VPC module
 
 ### Setup Security Group and KeyPair
@@ -76,4 +78,4 @@
 ## Step 3: Deploy CI/CD pipeline on Github Action for automate build and upload image to ECR
 
 
-
+## Refactor application with EKS cluster + OpenTeleMetry Stack
