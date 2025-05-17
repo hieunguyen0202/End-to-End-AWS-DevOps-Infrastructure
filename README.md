@@ -44,6 +44,25 @@
 
 ## Setup Terraform Environment with diffent stage and S3 backend storage
 
+- You need to have own AWS account and billing enable
+- Create IAM user with name `AWS-Infra-03-IAM-User` and grant role below
+    - AmazonS3FullAccess
+    - AmazonDynamoDBFullAccess
+
+- Go to AWS Console and create new Bucket Name `aws-infra-03-terraform-state`
+
+- Next step, you need to create `Access Key` for this user, so we can use it for auth with Github Action
+    - Access key: ``
+    - Secret access key: ``
+
+- You need to create secret environment in Github, choose `New repository secret`
+    - AWS_ACCESS_KEY_ID
+    - AWS_SECRET_ACCESS_KEY
+
+    ![alt text](image.png)
+
+- In this project, I setup Terraform with 2 env: dev, prod, also have using DynamoDB Table for State Locking. 
+
 ### Setup VPC module
 
 ### Setup Security Group and KeyPair
