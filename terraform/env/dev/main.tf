@@ -12,6 +12,7 @@ module "network" {
   private_subnet_names = var.private_subnet_names
   availability_zones   = var.availability_zones
   region               = var.region
+  
 }
 
 

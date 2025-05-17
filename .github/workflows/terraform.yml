@@ -17,6 +17,7 @@ env:
  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
  AWS_REGION: ap-southeast-1
+ TF_ACTION: ${{ secrets.TF_ACTION || 'create' }} # Default to create if not set
 
 
 
@@ -56,4 +57,11 @@ jobs:
          continue-on-error: true
        - name: Terraform plan status
          if: steps.plan.outcome == 'failure' 
-         run: exit 1     
+         run: exit 1
+       - name: Terraform action (apply or destroy)
+         if: env.TF_ACTION == 'create'
+         run: terraform apply -input=false planfile
+
+       - name: Terraform destroy
+         if: env.TF_ACTION == 'destroy'
+         run: terraform destroy -auto-approve
