@@ -24,3 +24,12 @@ output "rds_password_secret_name" {
 output "rds_password_secret_string" {
   value = aws_secretsmanager_secret_version.rds_password_version.secret_string
 }
+
+output "rmq_password_secret_name" {
+  value       = aws_secretsmanager_secret.rmq_password.name
+  description = "Name of the rmq password secret"
+}
+
+output "rmq_password_secret_string" {
+  value = aws_secretsmanager_secret_version.rmq_password_version.secret_string
+}

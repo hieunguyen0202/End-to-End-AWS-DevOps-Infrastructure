@@ -86,3 +86,44 @@ variable "project_tag" {
   type        = string
   default     = "AWS-Infra-03-RDSCacheMQBeanstalkInfra"
 }
+
+// Amamzon MQ
+variable "rabbitmq_broker_name" {
+  description = "Name of the RabbitMQ broker"
+  type        = string
+  default     = "aws-infra-03-rmq"
+}
+
+variable "rabbitmq_instance_type" {
+  description = "Instance type for RabbitMQ broker"
+  type        = string
+  default     = "mq.t3.micro"
+}
+
+variable "rabbitmq_username" {
+  description = "Username for RabbitMQ"
+  type        = string
+  default     = "rabbit"
+}
+
+variable "rabbitmq_password_secret_name" {
+  description = "Name of the AWS Secrets Manager secret storing RabbitMQ password"
+  type        = string
+}
+
+variable "rabbitmq_engine_version" {
+  description = "Version of RabbitMQ engine"
+  type        = string
+  default     = "3.10.20"
+}
+
+variable "rabbitmq_subnet_id" {
+  description = "Subnet ID for RabbitMQ broker"
+  type        = string
+}
+
+variable "project_tag" {
+  description = "Project tag to apply to resources"
+  type        = string
+  default     = "AWS-Infra-03-RDSCacheMQBeanstalkInfra" 
+}

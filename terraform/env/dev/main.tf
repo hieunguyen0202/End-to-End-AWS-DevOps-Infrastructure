@@ -23,16 +23,15 @@ module "security" {
   database_sg_name = var.database_sg_name
 }
 
-# data "aws_secretsmanager_secret_version" "db_password" {
-#   secret_id = module.security.rds_password_secret_name
-# }
 
 module "storage" {
-  source             = "../../modules/storage"
-  availability_zones = var.availability_zones
-  subnet_ids         = module.network.aws_subnet_private_id
-  security_group_id  = module.security.database_security_group_id
-  db_password        = module.security.rds_password_secret_string
+  source                        = "../../modules/storage"
+  availability_zones            = var.availability_zones
+  subnet_ids                    = module.network.aws_subnet_private_id
+  security_group_id             = module.security.database_security_group_id
+  db_password                   = module.security.rds_password_secret_string
+  rabbitmq_password_secret_name = module.security.rmq_password_secret_string
+  rabbitmq_subnet_id            = module.network.aws_subnet_private_id[0] 
 }
 
 

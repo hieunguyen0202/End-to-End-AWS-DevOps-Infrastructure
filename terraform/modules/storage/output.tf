@@ -16,7 +16,7 @@ output "rds_port" {
 
 output "elasticache_endpoint" {
   description = "ElastiCache Memcached endpoint"
-  value       = aws_elasticache_cluster.memcached.cache_nodes[0].address
+  value       = aws_elasticache_cluster.memcached.arn
 }
 
 output "elasticache_port" {

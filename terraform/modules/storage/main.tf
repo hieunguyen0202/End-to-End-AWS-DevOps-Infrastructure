@@ -81,3 +81,31 @@ resource "aws_elasticache_cluster" "memcached" {
   }
 }
 
+
+// Amamzon MQ
+
+resource "aws_mq_broker" "rabbitmq" {
+  broker_name               = var.rabbitmq_broker_name
+  engine_type               = "RabbitMQ"
+  engine_version            = var.rabbitmq_engine_version
+  host_instance_type        = var.rabbitmq_instance_type
+  deployment_mode           = "SINGLE_INSTANCE"
+  publicly_accessible       = false
+  subnet_ids                = [var.rabbitmq_subnet_id]
+  security_groups           = [var.security_group_id]
+  auto_minor_version_upgrade = false
+
+  user {
+    username = var.rabbitmq_username
+    password = data.aws_secretsmanager_secret_version.rabbitmq_password.secret_string
+  }
+
+  logs {
+    general = true
+  }
+
+  tags = {
+    Name    = var.rabbitmq_broker_name
+    project = var.project_tag
+  }
+}

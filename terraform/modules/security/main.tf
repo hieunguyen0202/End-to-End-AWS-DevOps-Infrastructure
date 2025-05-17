@@ -139,3 +139,16 @@ resource "aws_secretsmanager_secret_version" "rds_password_version" {
   secret_id     = aws_secretsmanager_secret.rds_password.id
   secret_string = "strong_password"
 }
+
+// Secrets Manager for Amamzon MQ
+
+resource "aws_secretsmanager_secret" "rmq_password" {
+  name = "aws-infra-03-rmq-password"
+  description = "Password for Amamzon MQ"
+}
+
+resource "aws_secretsmanager_secret_version" "rmq_password_version" {
+  secret_id     = aws_secretsmanager_secret.rmq_password.id
+  secret_string = "strong_password"
+}
+

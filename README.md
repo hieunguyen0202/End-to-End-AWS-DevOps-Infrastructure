@@ -124,8 +124,20 @@
 - No preference for maintenance window
 - Add tag `project : AWS-Infra-03-RDSCacheMQBeanstalkInfra`
 
-
 ### Setup Amazon MQ
+
+- Create broker engine `RabbitMQ` and choose deployment mode `Single-instance broker`
+- Set broker name `aws-infra-03-rmq` and choose broker instance type `mq.t3.micro`
+- Set user name `rabbit`
+- Store Password in AWS Secret Manager in security module with password `strong_password`
+- Choose Broker enginer version `3.10.20`
+- Also enable CloudWatch Logs for this
+- Choose Network Access type `Private access`
+- Choose exisiting VPC `aws-infra-03-vpc` and subnet `aws-infra-03-private-subnet-1`
+- Choose exsiting Security Group `aws-infra-03-database-sg`
+- No preference for maintenance window
+- Add tag `project : AWS-Infra-03-RDSCacheMQBeanstalkInfra`
+
 
 ### DB Initialization
 
