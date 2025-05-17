@@ -32,6 +32,7 @@ module "storage" {
   db_password                   = module.security.rds_password_secret_string
   rabbitmq_password_secret_name = module.security.rmq_password_secret_string
   rabbitmq_subnet_id            = module.network.aws_subnet_private_id[0] 
+
 }
 
 
