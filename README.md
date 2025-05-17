@@ -155,7 +155,7 @@
 - Give application name `aws-infra-03-beanstalk-app`
 - Give Environment name `aws-infra-03-beanstalk-env-dev`
 - Choose domain `aws-infra-03-vprofile`
-- Choose Platform type `Managed platform` -> Choose `Tomcat` -> Choose plarform branch `Tomcat 8.5` -> Choose platform version `4.3.10`
+- Choose Platform type `Managed platform` -> Choose `Tomcat` -> Choose plarform branch `Tomcat 11` -> Choose platform version `5.6.1`
 - Choose sample application code
 - For Presets -> Choose `Custom configuration`
 - For service role -> Create and use new service role with name `aws-infra-03-beanstalk-service-role` 
@@ -190,13 +190,6 @@
 - Application deployments
     - Policy `Rolling`
     - Batch size `Percentage`, with `50%` at a time
-
-
-
-
-
-
-
 
 
 

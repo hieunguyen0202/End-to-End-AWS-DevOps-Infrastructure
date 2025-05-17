@@ -80,3 +80,41 @@ variable "volume_size" {
   description = "Root volume size in GiB"
   type        = number
 }
+
+
+// From beanstalk-elb module
+
+variable "app_name" {
+  description = "Name of the Elastic Beanstalk application"
+  type        = string
+}
+
+variable "env_name" {
+  description = "Name of the Elastic Beanstalk environment"
+  type        = string
+}
+
+variable "project_tag" {
+  description = "Project tag to associate with resources"
+  type        = string
+}
+
+variable "ec2_role_name" {
+  description = "IAM role name for EC2 instances"
+  type        = string
+}
+
+variable "instance_profile_name" {
+  description = "IAM instance profile name for Beanstalk EC2s"
+  type        = string
+}
+
+variable "service_role_name" {
+  description = "Service role for Beanstalk environment"
+  type        = string
+}
+
+variable "ssl_certificate_arn" {
+  description = "SSL certificate ARN for HTTPS listener"
+  type        = string
+}

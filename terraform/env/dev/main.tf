@@ -45,6 +45,24 @@ module "bastion" {
   volume_size            = var.volume_size
 }
 
+module "beanstalk_elb" {
+  source                = "../../modules/beanstalk-elb"
+
+  app_name              = var.app_name                         
+  env_name              = var.env_name                    
+  project_tag           = var.project_tag                      
+  ec2_role_name         = var.ec2_role_name
+  instance_profile_name = var.instance_profile_name
+  service_role_name     = var.service_role_name
+  ec2_key_name          = var.key_name    
+
+  vpc_id                = module.network.vpc_id
+  ec2_security_groups   = module.security.private_security_group_id
+  private_subnets       = module.network.aws_subnet_private_id
+  public_subnets        = module.network.aws_subnet_public_id
+  elb_security_group    = module.security.public_security_group_id       
+  ssl_certificate_arn   = var.ssl_certificate_arn           
+}
 
 
 

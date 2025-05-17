@@ -23,4 +23,13 @@ instance_name = "aws-infra-01-bastion-vm"
 volume_size   = 10
 
 
+app_name        = "aws-infra-03-beanstalk-app"
+env_name        = "aws-infra-03-beanstalk-env-dev"    
+project_tag     = "AWS-Infra-03-RDSCacheMQBeanstalkInfra" 
+ec2_role_name     = "aws-infra-03-beanstalk-role"
+instance_profile_name     = "aws-infra-03-beanstalk-role" 
+service_role_name     = "aws-infra-03-beanstalk-service-role" 
+ssl_certificate_arn     = "arn:aws:acm:us-east-1:143735903781:certificate/647c393a-9169-4517-bb26-9ab713dda521" 
+
+
 
