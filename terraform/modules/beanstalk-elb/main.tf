@@ -59,7 +59,7 @@ resource "aws_elastic_beanstalk_application" "app" {
 resource "aws_elastic_beanstalk_environment" "env" {
   name                = var.env_name
   application         = aws_elastic_beanstalk_application.app.name
-  solution_stack_name = "64bit Amazon Linux 2 v4.3.10 running Tomcat 11"
+  platform_arn        = "arn:aws:elasticbeanstalk:ap-southeast-1::platform/Tomcat 11 Corretto 21 running on 64bit Amazon Linux 2023/5.6.1"
 
   setting {
     namespace = "aws:autoscaling:launchconfiguration"

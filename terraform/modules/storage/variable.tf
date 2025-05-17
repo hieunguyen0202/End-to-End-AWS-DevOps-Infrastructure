@@ -115,7 +115,7 @@ variable "rabbitmq_password" {
 variable "rabbitmq_engine_version" {
   description = "Version of RabbitMQ engine"
   type        = string
-  default     = "3.10.20"
+  default     = "3.13"
 }
 
 variable "rabbitmq_subnet_id" {
