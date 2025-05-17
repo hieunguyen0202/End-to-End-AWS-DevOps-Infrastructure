@@ -61,7 +61,6 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-
 # Allocate an Elastic IP for NAT Gateway
 resource "aws_eip" "nat" {
   domain = "vpc"
