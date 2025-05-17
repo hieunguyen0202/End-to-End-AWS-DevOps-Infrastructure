@@ -14,6 +14,14 @@ module "network" {
   region               = var.region
 }
 
+module "security" {
+  source           = "../modules/security"
+  vpc_id           = module.network.vpc_id
+  public_sg_name   = var.public_sg_name
+  private_sg_name  = var.private_sg_name
+  bastion_sg_name  = var.bastion_sg_name
+  database_sg_name = var.database_sg_name
+}
 
 
 

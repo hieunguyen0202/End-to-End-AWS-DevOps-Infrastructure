@@ -31,3 +31,21 @@ variable "private_subnet_names" {
 variable "availability_zones" {
   type = list(string)
 }
+
+# Variables from security module
+
+variable "public_sg_name" {
+  type = string
+}
+
+variable "private_sg_name" {
+  type = string
+}
+
+variable "bastion_sg_name" {
+  type = string
+}
+
+variable "database_sg_name" {
+  type = string
+}

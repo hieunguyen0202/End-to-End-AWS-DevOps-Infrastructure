@@ -89,14 +89,31 @@ resource "aws_security_group" "database_sg" {
   description = "Allow MongoDB from private and bastion SGs"
   vpc_id      = var.vpc_id
 
+    # Allow from private SG
   ingress {
-    from_port       = 27017
-    to_port         = 27017
+    description     = "Allow from private SG"
+    from_port       = 0
+    to_port         = 65535
     protocol        = "tcp"
-    security_groups = [
-      aws_security_group.private_sg.id,
-      aws_security_group.bastion_sg.id
-    ]
+    security_groups = [aws_security_group.private_sg.id]
+  }
+
+  # Allow from bastion SG
+  ingress {
+    description     = "Allow from bastion SG"
+    from_port       = 0
+    to_port         = 65535
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion_sg.id]
+  }
+
+  # Allow self-communication inside the database SG
+  ingress {
+    description     = "Allow internal database SG traffic"
+    from_port       = 0
+    to_port         = 65535
+    protocol        = "tcp"
+    self            = true
   }
 
   egress {
