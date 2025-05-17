@@ -16,5 +16,11 @@ private_sg_name  = "aws-infra-03-private-sg"
 bastion_sg_name  = "aws-infra-03-bastion-sg"
 database_sg_name = "aws-infra-03-database-sg"
 
+ami_id        = "ami-0c1907b6d738188e5"
+instance_type = "t3.small"
+key_name      = "aws-infra-01-key"
+instance_name = "aws-infra-01-bastion-vm"
+volume_size   = 10
+
 
 

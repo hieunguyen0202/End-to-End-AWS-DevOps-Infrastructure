@@ -34,6 +34,16 @@ module "storage" {
   rabbitmq_subnet_id            = module.network.aws_subnet_private_id[0] 
 }
 
+module "bastion" {
+  source                 = "../modules/bastion"
+  ami_id                 = var.ami_id
+  instance_type          = var.instance_type
+  key_name               = var.key_name
+  subnet_id              = module.network.aws_subnet_public_id[0]
+  vpc_security_group_ids = [module.security.bastion_security_group_id]
+  instance_name          = var.instance_name
+  volume_size            = var.volume_size
+}
 
 
 
