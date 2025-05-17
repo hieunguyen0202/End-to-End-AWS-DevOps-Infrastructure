@@ -85,7 +85,40 @@ Purpose: Acts as virtual firewalls for controlling inbound/outbound traffic for 
 
 # Implement Plan
 
-- Access source demo application
-- Write Terraform template to deploy IaC
-- How to use Github Action to auto IaC
-- 
+## Step 1: Automate IaC with Terraform
+
+### Setup VPC module
+
+### Setup Security Group and KeyPair
+
+
+### Setup RDS database module
+
+### Setup Elastice Cache
+
+### Setup Amazon MQ
+
+### DB Initialization
+
+
+### Setup application deploy with Elastic BeanStalk
+
+
+### Setup S3 bucket and S3 Endpoint Gateway
+
+
+### Setup Auto Scaling Group with ALB
+
+
+### Setup Cloud Front with AWS Cert Manager
+
+
+### Setup monitoring Stack with CloudWatch, SNS, EvenBridh
+
+## Step 2: Setup Github Action to automate deploy IaC Terraform (dev/prod)
+
+
+## Step 3: Deploy CI/CD pipeline on Github Action for automate build and upload image to ECR
+
+
+
