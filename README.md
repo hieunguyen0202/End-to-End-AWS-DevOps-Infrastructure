@@ -64,9 +64,17 @@
 
     ![alt text](image.png)
 
-- In this project, I setup Terraform with 2 env: dev, prod, also have using DynamoDB Table for State Locking. 
+- In this project, I setup Terraform with 2 env: dev, prod, and you need to update correct file `.github/workflows/terraform.yml` with two mode: `create` and `destroy`
 
 ### Setup VPC module
+
+- VPC name `aws-infra-03-vpc`
+- Private Subnet: [ "10.0.10.0/24", "10.0.20.0/24" ]  `aws-infra-03-private-subnet-1` `aws-infra-03-private-subnet-2`
+- Public Subnet: [ "10.0.1.0/24", "10.0.2.0/24" ]  `aws-infra-03-public-subnet-1` `aws-infra-03-public-subnet-2`
+- cidr_block = "10.0.0.0/16"
+- availability_zones = [ "ap-southeast-1a", "ap-southeast-1c" ]
+- region = "ap-southeast-1"
+- Enable VPC endpoint for S3 gateway
 
 ### Setup Security Group and KeyPair
 
