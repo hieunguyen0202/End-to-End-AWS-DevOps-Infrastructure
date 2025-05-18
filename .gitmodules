@@ -1,0 +1,3 @@
+[submodule "repos/vprofile-project"]
+	path = repos/vprofile-project
+	url = git@github.com:hieunguyen0202/vprofile-project.git
