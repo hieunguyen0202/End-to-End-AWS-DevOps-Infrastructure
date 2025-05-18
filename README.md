@@ -145,7 +145,7 @@
 ### DB Initialization
 
 
-### Setup application deploy with Elastic BeanStalk
+### Setup application deploy with Elastic BeanStalk & Setup Auto Scaling Group with ALB
 
 - Create EC2 role with name `aws-infra-03-beanstalk-role` and attach some policy below:
     - AWSElasticBeanstalkEnhancedHeath
@@ -195,22 +195,37 @@
     - Batch size `Percentage`, with `50%` at a time
 
 
-
 ### Setup S3 bucket and S3 Endpoint Gateway
 
 
-### Setup Auto Scaling Group with ALB
-
-
 ### Setup Cloud Front with AWS Cert Manager
+- Create distribution and give origin domain `cloudtech.io.vn`
+- Protocol `Match viewer`, `HTTP port 80`, `HTTPs port 443` and `TLSv1`
+- Give a name for origin `cloudtech.io.vn`
+- Compress objects automatically `Yes`
+- Viewer
+    - Choose `HTTP and HTTPs` in Viewer protocol policy
+    - choose `GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE` in Allow HTTP methods
+    - Restrict viewer access `No`
+- Choose Price class `Use Asia..`
+- Not enbale AWS WAF web ACL
+- Choose custom domain name `cloudtech.io.vn`
+- Choose custom exisiting SSL Certificate `arn:aws:acm:ap-southeast-1:143735903781:certificate/5ad129c2-f6e9-4840-be04-1ada1ae393da`
+- Choose security policy `TLSv1`
+- Support HHTP versions `HTTP/2`
+- Standard logging `Off`
+
+
 
 
 ### Setup monitoring Stack with CloudWatch, SNS, EvenBridh
 
 ## Step 2: Setup Github Action to automate deploy IaC Terraform (dev/prod)
 
+- You need to check on this path `.github/workflows/terraform.yml` and run this workflow
 
 ## Step 3: Deploy CI/CD pipeline on Github Action for automate build and upload image to ECR
+- You need to check on this path `repos/vprofile-project/.github/workflows/appbuild.yml` and run this workflow
 
 
 ## Refactor application with EKS cluster + OpenTeleMetry Stack
