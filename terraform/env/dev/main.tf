@@ -55,6 +55,7 @@ module "beanstalk_elb" {
   service_role_name     = var.service_role_name
   ec2_key_name          = var.key_name    
 
+
   vpc_id                = module.network.vpc_id
   ec2_security_groups   = module.security.private_security_group_id
   private_subnets       = module.network.aws_subnet_private_id
