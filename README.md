@@ -1,6 +1,6 @@
 # AWS-Infra-03-RDSCacheMQBeanstalkInfra
 
-![alt text](AWS-Infra-03-RDSCacheMQBeanstalkInfra.drawio.svg)
+![alt text](End-to-End-AWS-DevOps-Infrastructure.drawio.svg)
 
 # Application Overview
 
