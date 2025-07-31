@@ -1,4 +1,4 @@
-# 📘 DevOps Project Documentation
+# 📘 [AJ3] DevOps Project Documentation
 
 ## I. Project Overview
 
@@ -75,6 +75,11 @@ Frontend (Static):
     deploy-frontend.yml
 
 ```
+
+#### How to build CICD Terraform for automatically provisioning infrastructure
+
+[Link Text](docs/AJ3-CICD-Infra.md)
+
 
 ### 2. Terraform Infrastructure Modules
 
