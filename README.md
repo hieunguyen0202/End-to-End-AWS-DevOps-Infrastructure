@@ -93,17 +93,17 @@ All infrastructure is provisioned as modular Terraform code.
 
 | Module         | Purpose                                                         |
 |----------------|-----------------------------------------------------------------|
-| `vpc`          | Create VPC, public/private subnets, IGW, NAT, and route tables  |
+| `network`          | Create VPC, public/private subnets, IGW, NAT, and route tables  |
 | `transit-gateway` | Set up Transit Gateway and attach to VPCs                     |
-| `security`     | Define and attach Security Groups                               |
-| `bastion`      | Launch EC2 instance in public subnet for SSH access             |
+| `security`     | Define and attach Security Groups  |
+| `bastion`      | Launch EC2 instance in public subnet for SSH access |
 | `nginx`        | Deploy EC2 instance for static frontend (Nginx server)          |
-| `rds`          | Provision RDS (MySQL) with Multi-AZ                             |
-| `mq`           | Set up Amazon MQ (e.g., ActiveMQ)                               |
-| `elasticache`  | Deploy Memcached via ElastiCache                                |
+| `database`     | Provision RDS (MySQL) with Multi-AZ, Amazon MQ (e.g., ActiveMQ), Memcached via ElastiCache |
 | `autoscaling`  | Set up Auto Scaling Group for application servers               |
 | `nlb`          | Configure public/private Network Load Balancers                 |
 | `iam`          | Create IAM roles and policies for EC2, ECS, and other services  |
+| `ecs`          | Create ECS cluster |
+
 
 
 #### 📁 Recommended Structure:
@@ -112,15 +112,15 @@ All infrastructure is provisioned as modular Terraform code.
 terraform/
 ├── modules/
 │   └── network/
-│       └── main.tf        # Reusable module for VPC, Subnets, etc.
+│       └── main.tf        
 │   └── bastion/
-│       └── main.tf        # Reusable module for EC2, VM, etc.
-│   └── ecs-cluster/
-│       └── main.tf        # Reusable module for ECS, etc.
+│       └── main.tf        
+│   └── ecs/
+│       └── main.tf        
 │   └── security/
-│       └── main.tf        # Reusable module for IAM, Security Group etc.
-│   └── storage/
-│       └── main.tf        # Reusable module for database, memcached etc.
+│       └── main.tf        
+│   └── database/
+│       └── main.tf        
 ├── envs/
 │   ├── dev/
 │   │   ├── main.tf
