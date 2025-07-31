@@ -108,8 +108,14 @@ terraform/
 ├── modules/
 │   └── network/
 │       └── main.tf        # Reusable module for VPC, Subnets, etc.
-│   └── compute/
+│   └── bastion/
 │       └── main.tf        # Reusable module for EC2, VM, etc.
+│   └── ecs-cluster/
+│       └── main.tf        # Reusable module for ECS, etc.
+│   └── security/
+│       └── main.tf        # Reusable module for IAM, Security Group etc.
+│   └── storage/
+│       └── main.tf        # Reusable module for database, memcached etc.
 ├── envs/
 │   ├── dev/
 │   │   ├── main.tf
@@ -122,6 +128,48 @@ terraform/
 └── variables.tf           # Common variable definitions
 
 ```
+
+#### Create Separate Environments with Workspaces
+
+To use workspaces, eg. DEV environment
+
+```
+terraform workspace new dev
+terraform workspace select dev
+terraform apply -var-file="envs/dev/terraform.tfvars"
+
+```
+
+#### Use Environment-specific Variables
+
+```
+env_name       = "dev"
+vnet_name      = "dev-vnet"
+address_space  = "10.0.0.0/16"
+location       = "East US"
+resource_group = "rg-dev"
+
+```
+
+#### Use Separate Backends
+
+For state separation across environments, define different backends.
+
+Eg. `envs/dev/backend.tf`
+
+```
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state-bucket"   
+    key            = "dev/terraform.tfstate"        
+    region         = "us-east-1"                    
+    dynamodb_table = "terraform-locks"              
+    encrypt        = true                           
+  }
+}
+
+```
+
 
 ### 3. Golden AMI Creation
 
