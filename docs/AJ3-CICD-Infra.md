@@ -38,15 +38,21 @@ terraform/
 name: Terraform CI/CD
 
 on:
-  push:
-    branches:
-      - dev
-      - uat
-      - pre-prod
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Select the environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - uat
+          - pre-prod
 
 jobs:
   terraform:
-    name: Terraform Deploy
+    name: Deploy to ${{ github.event.inputs.environment }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -71,31 +77,27 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Set environment-specific variables
-        id: vars
-        run: |
-          ENV_NAME=$(echo "${GITHUB_REF##*/}")
-          echo "env_name=$ENV_NAME" >> "$GITHUB_OUTPUT"
-
       - name: Initialize Terraform
         run: |
-          cd terraform/envs/${{ steps.vars.outputs.env_name }}
+          cd terraform/envs/${{ github.event.inputs.environment }}
           terraform init
 
       - name: Terraform Plan
         run: |
-          cd terraform/envs/${{ steps.vars.outputs.env_name }}
+          cd terraform/envs/${{ github.event.inputs.environment }}
           terraform plan -var-file="terraform.tfvars"
 
-      - name: Terraform Apply
-        if: github.ref != 'refs/heads/pre-prod'  # Auto-apply only for dev and uat
+      - name: Terraform Apply (dev/uat)
+        if: ${{ github.event.inputs.environment != 'pre-prod' }}
         run: |
-          cd terraform/envs/${{ steps.vars.outputs.env_name }}
+          cd terraform/envs/${{ github.event.inputs.environment }}
           terraform apply -var-file="terraform.tfvars" -auto-approve
 
-      - name: Terraform Manual Approval for PRE-PROD
-        if: github.ref == 'refs/heads/pre-prod'
-        run: echo "Manual approval required before applying to PRE-PROD"
+      - name: Manual Approval Required (pre-prod)
+        if: ${{ github.event.inputs.environment == 'pre-prod' }}
+        run: |
+          echo "Manual approval required before applying to PRE-PROD."
+          echo "Skipping auto-apply. Please review and apply manually if needed."
 
 ```
 
@@ -108,9 +110,11 @@ In your GitHub repo, add the following secrets under Settings > Secrets and vari
 
 ## 💡 CI/CD Workflow Explanation
 
-| Component             | Purpose                                                                 |
-|----------------------|-------------------------------------------------------------------------|
-| `push: branches:`     | Triggers deployment when changes are pushed to `dev`, `uat`, or `pre-prod`. |
-| `terraform init`      | Initializes backend config from each environment’s `backend.tf`.         |
-| `terraform plan/apply`| Uses each environment’s `.tfvars` file to apply the Terraform configuration. |
-| Conditional apply     | Auto-applies changes for `dev` and `uat`; manual approval recommended for `pre-prod`. |
+| Component                 | Purpose                                                                                   |
+|--------------------------|-------------------------------------------------------------------------------------------|
+| `workflow_dispatch`      | Manually triggers the workflow with an environment dropdown (`dev`, `uat`, `pre-prod`).   |
+| `terraform init`         | Initializes the backend configuration using each environment’s `backend.tf`.              |
+| `terraform plan`         | Generates and shows an execution plan using the selected environment’s `.tfvars` file.    |
+| `terraform apply`        | Automatically applies for `dev` and `uat`. For `pre-prod`, apply step is skipped (manual).|
+| `inputs.environment`     | User-selected input to determine which environment to deploy (`dev`, `uat`, or `pre-prod`).|
+
