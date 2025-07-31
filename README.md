@@ -1,6 +1,7 @@
-📘 DevOps Project Documentation
+# 📘 DevOps Project Documentation
 
-I. Project Overview
+## I. Project Overview
+
 - Project Name: End to End AWS DevOps Infrastructure
 
 - Objective: Automate the build, deployment, and infrastructure provisioning of a Java-based 3-tier web application using CI/CD pipelines and Infrastructure as Code (IaC).
@@ -23,7 +24,7 @@ I. Project Overview
 ![alt text](End-to-End-AWS-DevOps-Infrastructure.drawio.svg)
 
 
-II. High-Level Architecture
+## II. High-Level Architecture
 
 Provide a visual representation of:
 
@@ -37,12 +38,12 @@ Provide a visual representation of:
 - Security (IAM, SGs, Encryption)
 
 
-III. Repository Structure
+## III. Repository Structure
 
 
-IV. Module Documentation
+## IV. Module Documentation
 
-1. CI/CD Pipeline (GitHub Actions)
+### 1. CI/CD Pipeline (GitHub Actions)
 
 🔹 Overview
 
@@ -67,7 +68,7 @@ Frontend (Static):
 - Build static files (React/Angular/etc.)
 - Copy build output to Nginx EC2 server via SSH or deploy with S3 + CloudFront
 
-📁 GitHub Actions Folder Structure:
+#### 📁 GitHub Actions Folder Structure:
 
 ```
 .github/
@@ -79,7 +80,7 @@ Frontend (Static):
 
 ```
 
-2. Terraform Infrastructure Modules
+### 2. Terraform Infrastructure Modules
 
 🔹 Overview
 
@@ -87,7 +88,7 @@ All infrastructure is provisioned as modular Terraform code.
 
 🔸 Modules Breakdown
 
-## 📦 Terraform Module Overview
+#### 📦 Terraform Module Overview
 
 | Module         | Purpose                                                         |
 |----------------|-----------------------------------------------------------------|
@@ -104,7 +105,7 @@ All infrastructure is provisioned as modular Terraform code.
 | `iam`          | Create IAM roles and policies for EC2, ECS, and other services  |
 
 
-📁 Recommended Structure:
+#### 📁 Recommended Structure:
 
 ```
 terraform/
@@ -120,7 +121,7 @@ terraform/
 
 ```
 
-3. Golden AMI Creation
+### 3. Golden AMI Creation
 
 🔹 Overview
 
@@ -138,9 +139,9 @@ Install: AWS CLI, CloudWatch Agent, SSM Agent
 
 📌 Optionally use Packer for automation.
 
-4. Monitoring & Logging
+### 4. Monitoring & Logging
 
-## 🔍 Monitoring & Logging
+#### 🔍 Monitoring & Logging
 
 | Tool           | Purpose                                                                 |
 |----------------|-------------------------------------------------------------------------|
@@ -150,9 +151,9 @@ Install: AWS CLI, CloudWatch Agent, SSM Agent
 | `SNS`          | Send notifications via Email/SMS when alarms are triggered              |
 
 
-5. Application Lifecycle
+### 5. Application Lifecycle
 
-## 🔄 Application Lifecycle
+#### 🔄 Application Lifecycle
 
 | Phase                   | Tasks                                                                 |
 |-------------------------|-----------------------------------------------------------------------|
@@ -162,7 +163,7 @@ Install: AWS CLI, CloudWatch Agent, SSM Agent
 | `Post-Deployment`       | Set up CloudWatch alerts, validate deployment, and configure log rotation |
 
 
-VI. Security Best Practices
+## VI. Security Best Practices
 
 - Store secrets in GitHub Secrets or AWS Parameter Store
 - Use IAM roles, avoid access keys in pipelines
