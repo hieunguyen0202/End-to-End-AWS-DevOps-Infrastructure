@@ -122,9 +122,11 @@ terraform/
 │   │   ├── backend.tf
 │   │   └── terraform.tfvars
 │   ├── uat/
-│   │   └── ...
+│   │   ├── backend.tf
+│   │   └── terraform.tfvars
 │   └── pre-prod/
-│       └── ...
+│       ├── backend.tf
+│       └── terraform.tfvars
 └── variables.tf           # Common variable definitions
 
 ```
