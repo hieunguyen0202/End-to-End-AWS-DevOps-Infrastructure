@@ -93,8 +93,7 @@ All infrastructure is provisioned as modular Terraform code.
 
 | Module         | Purpose                                                         |
 |----------------|-----------------------------------------------------------------|
-| `network`          | Create VPC, public/private subnets, IGW, NAT, and route tables  |
-| `transit-gateway` | Set up Transit Gateway and attach to VPCs                     |
+| `network`          | Create VPC, public/private subnets, IGW, NAT, and route tables, Transit Gateway  |
 | `security`     | Define and attach Security Groups  |
 | `bastion`      | Launch EC2 instance in public subnet for SSH access |
 | `nginx`        | Deploy EC2 instance for static frontend (Nginx server)          |
