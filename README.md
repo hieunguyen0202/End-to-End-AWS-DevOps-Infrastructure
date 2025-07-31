@@ -7,15 +7,11 @@
 - Objective: Automate the build, deployment, and infrastructure provisioning of a Java-based 3-tier web application using CI/CD pipelines and Infrastructure as Code (IaC).
 
 - Key values:
-    - Streamlined CI/CD pipelines (Jenkins + Helm) across DEV/UAT/PRE-PROD environments to automate build, deploy, vulnerability scanning, packaging, alerting, reporting, and backup tasks — reducing manual workload by 60%. Improved deployment speed and reduced image size by 80% through lightweight base images, caching strategies.
-
-    - Deployed and configured CI/CD systems onsite at the client environment, setting up Helm, Quay.io authentication, and pipeline integration to enable secure. Guided CIMB release teams on CI/CD and DevSecOps best practices.
-
-    - Enhanced CI/CD security by integrating SonarQube, Snyk, and Trivy — reducing vulnerabilities by 70% and improving overall code quality. Followed Helm best practices to mitigate security risks during client deployment audits.
-    
-    - Implemented observability stack with OpenTelemetry (Tempo, Loki, Prometheus, Grafana) to monitor pod performance, resource usage, and request latency. Integrated with Kubernetes HPA policies to auto-scale workloads based on real-time metrics, ensuring high system availability and maintaining SLA uptime of 99.95%.
-    
-    - Reduced delivery time by 60% by packaging applications as Helm Charts with clear release tags and documentation, enabling easier version tracking, rollback, and streamlined delivery management for both developers and clients.
+    - Built modular Terraform infrastructure for DEV/UAT/DR, enabling version-controlled, repeatable deployments. Optimized provisioning, reduced manual effort, improved consistency, and ensured high availability across AZs with autoscaling, NAT, ECS, and ALBs.
+    - Implemented CI/CD pipeline via GitHub Actions, deploying Java microservices to ECS Fargate with JFrog Artifactory and version tagging, enhancing deployment speed, ensuring release traceability, minimizing human error, and improving delivery consistency across environments.
+    - Enhanced infrastructure security by enforcing IAM and security groups via Terraform, minimizing exposure through strict private/public segmentation, detecting code and dependency vulnerabilities with SonarQube and JFrog Xray to reduce attack surface and ensure compliance.
+    - Enabled high availability and disaster recovery by configuring multi-AZ RDS (MySQL) with automated backups, cross-region snapshot replication, and structured DR playbooks to meet SLA uptime target of 99.95%.
+    - Enforced centralized monitoring and alerting using AWS CloudWatch Alarms, AWS CloudTrail, and VPC Flow Logs to track resource health, container behavior, and suspicious activity—enhancing observability and response readiness across all environments.
 
 - Tech Stack: GitHub Actions, Terraform, Docker, ECS, ECR, SonarCloud, JFrog, RDS (MySQL), Amazon MQ, ElastiCache (Memcached), CloudWatch, CloudFront, ALB, Nginx, Tomcat, Maven.
 
