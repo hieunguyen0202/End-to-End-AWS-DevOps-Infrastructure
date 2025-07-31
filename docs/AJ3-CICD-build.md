@@ -14,42 +14,73 @@ Below is a complete GitHub Actions CI/CD pipeline to automate build docker image
 ## 🚀 GitHub Actions CI/CD Workflow
 
 ```
-# File: .github/workflows/aj3-terraform-ci.yml
-name: Terraform CI/CD
+# File: .github/workflows/aj3-build-cicd.yml
+name: Build & Push Docker Image to ECR
 
 on:
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Select the environment to deploy'
+      version:
+        description: 'Docker image version tag (e.g., 0.0.0)'
         required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - uat
-          - pre-prod
+        default: '0.0.0'
 
 jobs:
-  terraform:
-    name: Deploy to ${{ github.event.inputs.environment }}
+  build:
+    name: CI/CD Build & Push
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
 
     env:
       AWS_REGION: us-east-1
+      ECR_REPO: my-ecr-repo-name                     # <- Replace with your ECR repo
+      IMAGE_TAG: ${{ github.event.inputs.version }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout latest from dev
         uses: actions/checkout@v3
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.6.0
+          ref: dev
 
+      # SonarQube Scan
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@v1.2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: .
+          args: >
+            -Dsonar.projectKey=my-project
+            -Dsonar.organization=my-org
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
+
+      - name: Check SonarQube Quality Gate
+        uses: sonarsource/sonarqube-quality-gate-action@v1.1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # JFrog Upload (replace with correct JFrog CLI commands or plugins)
+      - name: Upload artifacts to JFrog Artifactory
+        run: |
+          curl -u ${{ secrets.JFROG_USER }}:${{ secrets.JFROG_API_KEY }} \
+          -T ./path/to/your-artifact.zip \
+          "https://mycompany.jfrog.io/artifactory/my-repo/your-artifact-${{ env.IMAGE_TAG }}.zip"
+
+      # Docker build
+      - name: Build Docker image
+        run: |
+          docker build -t $ECR_REPO:${{ env.IMAGE_TAG }} .
+
+      # Trivy Scan
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+
+      # Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -57,44 +88,41 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Initialize Terraform
-        run: |
-          cd terraform/envs/${{ github.event.inputs.environment }}
-          terraform init
+      # Login to ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Terraform Plan
+      # Push Docker image to ECR
+      - name: Push Docker image to ECR
         run: |
-          cd terraform/envs/${{ github.event.inputs.environment }}
-          terraform plan -var-file="terraform.tfvars"
-
-      - name: Terraform Apply (dev/uat)
-        if: ${{ github.event.inputs.environment != 'pre-prod' }}
-        run: |
-          cd terraform/envs/${{ github.event.inputs.environment }}
-          terraform apply -var-file="terraform.tfvars" -auto-approve
-
-      - name: Manual Approval Required (pre-prod)
-        if: ${{ github.event.inputs.environment == 'pre-prod' }}
-        run: |
-          echo "Manual approval required before applying to PRE-PROD."
-          echo "Skipping auto-apply. Please review and apply manually if needed."
+          docker tag $ECR_REPO:${{ env.IMAGE_TAG }} ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO:${{ env.IMAGE_TAG }}
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO:${{ env.IMAGE_TAG }}
 
 ```
 
-## 🛡️ GitHub Secrets Required
+## 🔐 GitHub Secrets You Need
 
-In your GitHub repo, add the following secrets under Settings > Secrets and variables > Actions:
+| Secret Name             | Description                                                |
+|-------------------------|------------------------------------------------------------|
+| `AWS_ACCESS_KEY_ID`     | Your AWS access key                                        |
+| `AWS_SECRET_ACCESS_KEY` | Your AWS secret access key                                 |
+| `SONAR_TOKEN`           | Your SonarQube authentication token                        |
+| `SONAR_HOST_URL`        | SonarQube server URL (e.g., `https://sonarcloud.io`)       |
+| `JFROG_USER`            | JFrog username                                             |
+| `JFROG_API_KEY`         | JFrog API key or password                                  |
 
-- AWS_ACCESS_KEY_ID
-- AWS_SECRET_ACCESS_KEY
 
 ## 💡 CI/CD Workflow Explanation
 
-| Component                 | Purpose                                                                                   |
-|--------------------------|-------------------------------------------------------------------------------------------|
-| `workflow_dispatch`      | Manually triggers the workflow with an environment dropdown (`dev`, `uat`, `pre-prod`).   |
-| `terraform init`         | Initializes the backend configuration using each environment’s `backend.tf`.              |
-| `terraform plan`         | Generates and shows an execution plan using the selected environment’s `.tfvars` file.    |
-| `terraform apply`        | Automatically applies for `dev` and `uat`. For `pre-prod`, apply step is skipped (manual).|
-| `inputs.environment`     | User-selected input to determine which environment to deploy (`dev`, `uat`, or `pre-prod`).|
+| Stage                         | Purpose                                                                 |
+|-------------------------------|-------------------------------------------------------------------------|
+| `checkout from dev`           | Pulls the latest source code from the `dev` branch                      |
+| `SonarQube Scan`              | Analyzes code quality using SonarQube                                   |
+| `Check Sonar Quality Gate`    | Verifies code meets defined quality standards                           |
+| `Upload to JFrog`             | Publishes build artifacts to JFrog Artifactory                          |
+| `Docker Build`                | Builds a Docker image from the latest codebase                          |
+| `Trivy Image Scan`            | Scans the Docker image for vulnerabilities                              |
+| `AWS ECR Login`               | Authenticates Docker to push images to AWS Elastic Container Registry   |
+| `Push Docker to ECR`          | Tags and pushes the built image to AWS ECR with dynamic version (e.g., `0.0.0`) |
 
