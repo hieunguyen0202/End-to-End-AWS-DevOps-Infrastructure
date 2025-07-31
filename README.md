@@ -69,7 +69,7 @@ Frontend (Static):
 ```
 .github/
   workflows/
-    build-backend.yml
+    aj3-terraform-ci.yml
     deploy-backend.yml
     build-frontend.yml
     deploy-frontend.yml
@@ -78,7 +78,7 @@ Frontend (Static):
 
 #### How to build CICD Terraform for automatically provisioning infrastructure
 
-[Link Text](docs/AJ3-CICD-Infra.md)
+[📘 Github Action CICD Terraform Infra](docs/AJ3-CICD-Infra.md)
 
 
 ### 2. Terraform Infrastructure Modules
