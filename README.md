@@ -76,9 +76,11 @@ Frontend (Static):
 
 ```
 
-#### How to build CICD Terraform for automatically provisioning infrastructure
+#### Documentation for CICD
 
 [📘 Github Action CICD Terraform Infra](docs/AJ3-CICD-Infra.md)
+
+[📘 Github Action CICD for Build Docker Image](docs/AJ3-CICD-build.md)
 
 
 ### 2. Terraform Infrastructure Modules

@@ -1,20 +1,3 @@
-# 📘 [AJ3] Github Action CICD for Build Docker Image 
-
-Below is a complete GitHub Actions CI/CD pipeline to automate build docker image with dynamic version tag
-
-## Goals
-- Pulls latest from dev
-- Runs SonarQube scan and checks Quality Gate
-- Publishes artifacts to JFrog Artifactory
-- Builds a Docker image
-- Scans it with Trivy
-- Pushes to AWS ECR with dynamic version tag (e.g., 0.0.0 or from commit/tag)
-
-
-## 🚀 GitHub Actions CI/CD Workflow
-
-```
-# File: .github/workflows/aj3-build-cicd.yml
 name: Build & Push Docker Image to ECR
 
 on:
@@ -98,31 +81,3 @@ jobs:
         run: |
           docker tag $ECR_REPO:${{ env.IMAGE_TAG }} ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO:${{ env.IMAGE_TAG }}
           docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO:${{ env.IMAGE_TAG }}
-
-```
-
-## 🔐 GitHub Secrets You Need
-
-| Secret Name             | Description                                                |
-|-------------------------|------------------------------------------------------------|
-| `AWS_ACCESS_KEY_ID`     | Your AWS access key                                        |
-| `AWS_SECRET_ACCESS_KEY` | Your AWS secret access key                                 |
-| `SONAR_TOKEN`           | Your SonarQube authentication token                        |
-| `SONAR_HOST_URL`        | SonarQube server URL (e.g., `https://sonarcloud.io`)       |
-| `JFROG_USER`            | JFrog username                                             |
-| `JFROG_API_KEY`         | JFrog API key or password                                  |
-
-
-## 💡 CI/CD Workflow Explanation
-
-| Stage                         | Purpose                                                                 |
-|-------------------------------|-------------------------------------------------------------------------|
-| `checkout from dev`           | Pulls the latest source code from the `dev` branch                      |
-| `SonarQube Scan`              | Analyzes code quality using SonarQube                                   |
-| `Check Sonar Quality Gate`    | Verifies code meets defined quality standards                           |
-| `Upload to JFrog`             | Publishes build artifacts to JFrog Artifactory                          |
-| `Docker Build`                | Builds a Docker image from the latest codebase                          |
-| `Trivy Image Scan`            | Scans the Docker image for vulnerabilities                              |
-| `AWS ECR Login`               | Authenticates Docker to push images to AWS Elastic Container Registry   |
-| `Push Docker to ECR`          | Tags and pushes the built image to AWS ECR with dynamic version (e.g., `0.0.0`) |
-
