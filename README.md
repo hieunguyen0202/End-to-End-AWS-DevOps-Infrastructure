@@ -68,8 +68,6 @@ Frontend (Static):
 
 📁 GitHub Actions Folder Structure:
 
-📁 GitHub Actions Folder Structure:
-
 ```
 .github/
   workflows/
