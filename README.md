@@ -1,231 +1,229 @@
-# High Level Design AJ3 (AWS-JAVA-3TIER)
+# 📘 [AJ3] DevOps Project Documentation
+
+## I. Project Overview
+
+- Project Name: End to End AWS DevOps Infrastructure
+
+- Objective: Automate the build, deployment, and infrastructure provisioning of a Java-based 3-tier web application using CI/CD pipelines and Infrastructure as Code (IaC).
+
+- Key values:
+    - Built modular Terraform infrastructure for DEV/UAT/DR, enabling version-controlled, repeatable deployments. Optimized provisioning, reduced manual effort, improved consistency, and ensured high availability across AZs with autoscaling, NAT, ECS, and ALBs.
+    - Implemented CI/CD pipeline via GitHub Actions, deploying Java microservices to ECS Fargate with JFrog Artifactory and version tagging, enhancing deployment speed, ensuring release traceability, minimizing human error, and improving delivery consistency across environments.
+    - Enhanced infrastructure security by enforcing IAM and security groups via Terraform, minimizing exposure through strict private/public segmentation, detecting code and dependency vulnerabilities with SonarQube and JFrog Xray to reduce attack surface and ensure compliance.
+    - Enabled high availability and disaster recovery by configuring multi-AZ RDS (MySQL) with automated backups, cross-region snapshot replication, and structured DR playbooks to meet SLA uptime target of 99.95%.
+    - Enforced centralized monitoring and alerting using AWS CloudWatch Alarms, AWS CloudTrail, and VPC Flow Logs to track resource health, container behavior, and suspicious activity—enhancing observability and response readiness across all environments.
+
+- Tech Stack: GitHub Actions, Terraform, Docker, ECS, ECR, SonarCloud, JFrog, RDS (MySQL), Amazon MQ, ElastiCache (Memcached), CloudWatch, CloudFront, ALB, Nginx, Tomcat, Maven.
+
+- Architecture Diagram: (AWS-JAVA-3TIER)
 
 ![alt text](End-to-End-AWS-DevOps-Infrastructure.drawio.svg)
 
-# Application Overview
 
-🔹 Frontend & Network Entry
-- CloudFront: Acts as a CDN (Content Delivery Network) to cache and distribute content globally, reducing latency and improving performance for users.
-- Application Load Balancer (ALB): Distributes incoming HTTP/HTTPS traffic across multiple instances in the Auto Scaling Group to ensure high availability and fault tolerance.
-- Internet Gateway: Allows communication between instances in the public subnet and the internet.
+## II. High-Level Architecture
 
-🔹 Networking & Routing
-- VPC (Virtual Private Cloud): Isolates and controls network settings for all resources, enhancing security.
-- Public Subnets: Host internet-facing resources like the ALB and NAT Gateway.
-- Private Subnets: Host backend services like application servers, databases, MQ, and caching, not directly exposed to the internet.
-- Route Tables: Manage routing between subnets, S3, and the internet.
-- NAT Gateway: Allows instances in the private subnet to access the internet (e.g., to download updates) without exposing them directly.
-- S3 Gateway Endpoint: Enables private network access to Amazon S3 without using the Internet Gateway, improving security and reducing data transfer costs.
+Provide a visual representation of:
 
-🔹 Compute Layer
-- Auto Scaling Group (ASG): Automatically adds/removes EC2 instances based on demand, ensuring scalability and high availability of the application layer.
-
-🔹 Application Integration
-- Amazon MQ: Managed message broker (e.g., ActiveMQ or RabbitMQ) used to decouple application components and manage asynchronous communication.
-
-- Memcached (Amazon ElastiCache): Provides in-memory data caching to reduce database load and increase application performance.
-
-🔹 Data Storage
-- Amazon RDS: Managed relational database service used to store application data (e.g., MySQL, PostgreSQL, etc.) with high availability and automated backups.
-
-- Amazon S3: Object storage for storing static assets, backups, deployment artifacts, logs, and other large files.
-
-🔹 Monitoring & Alerting
-- Amazon CloudWatch: Monitors logs, metrics, and events; used to trigger alarms based on defined thresholds.
-- CloudWatch Alarms: Watch specific metrics and trigger actions (e.g., scale out or send notifications).
-- SNS Topic (Simple Notification Service): Sends alerts via email, SMS, or other protocols when an alarm is triggered (e.g., CPU usage exceeds threshold).
-
-🔹 Security
-- Security Groups: Acts as virtual firewalls for controlling inbound/outbound traffic for EC2, ALB, Amazon MQ, and RDS.
-
-# Implement Plan
-
-## Step 1: Automate IaC with Terraform
-
-## Setup Terraform Environment with diffent stage and S3 backend storage
-
-- You need to have own AWS account and billing enable
-- Create IAM user with name `AWS-Infra-03-IAM-User` and grant role below
-    - AmazonS3FullAccess
-    - AmazonDynamoDBFullAccess
-    - AmazonVPCFullAccess
-    - AmazonEC2FullAccess
-    - SecretsManagerReadWrite
-    - AmazonRDSFullAccess
-    - IAMFullAccess
-    - AdministratorAccess-AWSElasticBeanstalk
-    - AWSCertificateManagerFullAccess
+- CI/CD Pipeline
+- Frontend (Static App on Nginx)
+- Backend (Java App on ECS)
+- RDS Database Tier
+- Messaging, Caching
+- VPC, Subnets, NAT, IGW, Transit Gateway
+- Monitoring & Logging
+- Security (IAM, SGs, Encryption)
 
 
-- Go to AWS Console and create new Bucket Name `aws-infra-03-terraform-state`
-
-- Next step, you need to create `Access Key` for this user, so we can use it for auth with Github Action
-    - Access key: ``
-    - Secret access key: ``
-
-- You need to create secret environment in Github, choose `New repository secret`
-    - AWS_ACCESS_KEY_ID
-    - AWS_SECRET_ACCESS_KEY
-
-    ![alt text](image.png)
-
-- In this project, I setup Terraform with 2 env: dev, prod, and you need to update correct file `.github/workflows/terraform.yml` with two mode: `create` and `destroy`
-
-### Setup VPC module
-
-- VPC name `aws-infra-03-vpc`
-- Private Subnet: [ "10.0.10.0/24", "10.0.20.0/24" ]  `aws-infra-03-private-subnet-1` `aws-infra-03-private-subnet-2`
-- Public Subnet: [ "10.0.1.0/24", "10.0.2.0/24" ]  `aws-infra-03-public-subnet-1` `aws-infra-03-public-subnet-2`
-- cidr_block = "10.0.0.0/16"
-- availability_zones = [ "ap-southeast-1a", "ap-southeast-1c" ]
-- region = "ap-southeast-1"
-- Enable VPC endpoint for S3 gateway
-
-### Setup Security Group and KeyPair
-
-- Public-sg (Allow internet port 80/443) `aws-infra-03-public-sg`
-- Private-sg (Allow from public-sg) `aws-infra-03-private-sg`
-- bastion-sg (Allow ssh from my public IP) `aws-infra-03-bastion-sg`
-- database-sg (Allow all port from Private-sg, bastion-sg, Also allow internal port in in Database Security group) `aws-infra-03-database-sg`
-
-### Setup RDS database module
-
-- Create RDS database
-- Create DB subnet group `aws-infra-03-rds-sub-grp`
-- Add availability zone ["ap-southeast-1a", "ap-southeast-1c"]
-- Add RDS to Subnets `aws-infra-03-private-subnet-1`
-- Create parameter group with name `aws-infra-03-para-grp`
-- Create database -> Standard Database -> MySQL -> Engine Version `8.0.41` -> Template `Free Tier` -> Choose `Single DB instance`
-- Give a name `aws-infra-03-rds-mysql-db`
-- Master username `admin`
-- Store Password in AWS Secret Manager in security module with password `strong_password`
-- In instance configuration `Burstable classes` and choose  `db.t3.micro`
-- Storge type `gp2`
-- Allocated Storage `20GiB`
-- Choose Don't connect to an EC2 compute
-- Network type IPv4m choose this `aws-infra-03-vpc` and assign for DB subnet group `aws-infra-03-rds-sub-grp`
-- Choose exsiting Security Group `aws-infra-03-database-sg`
-- Choose Database port `3306`
-- Database authentication `Password authentication`
-- Choose `General log`
+## III. Repository Structure
 
 
-### Setup Elastice Cache
+## IV. Module Documentation
 
-- Create subnet group `aws-infra-03-elasticecache-sub-grp` and attach to `aws-infra-03-vpc`
-- Create parameter group with name `aws-infra-03-elasticecache-para-grp`
-- Choose family `memcached1.6`
-- Create Memcached Cluster -> Choose Deployment option `Design your own cache` 
-- Creation method `Cluster cache` and Location `AWS Cloud`
-- And give a name `aws-infra-03-elasticecache-svc`
-- Choose Engine version `1.6.17` and port `11211`
-- Choose and assign for `aws-infra-03-elasticecache-para-grp`
-- Choose Node type `cache.t2.micro`
-- Choose number of nodes : `1`
-- Choose existing subnet group `aws-infra-03-elasticecache-sub-grp`
-- Choose exsiting Security Group `aws-infra-03-database-sg`
-- No preference for maintenance window
-- Add tag `project : AWS-Infra-03-RDSCacheMQBeanstalkInfra`
+### 1. CI/CD Pipeline (GitHub Actions)
 
-### Setup Amazon MQ
+🔹 Overview
 
-- Create broker engine `RabbitMQ` and choose deployment mode `Single-instance broker`
-- Set broker name `aws-infra-03-rmq` and choose broker instance type `mq.t3.micro`
-- Set user name `rabbit`
-- Store Password in AWS Secret Manager in security module with password `strong_password`
-- Choose Broker enginer version `3.10.20`
-- Also enable CloudWatch Logs for this
-- Choose Network Access type `Private access`
-- Choose exisiting VPC `aws-infra-03-vpc` and subnet `aws-infra-03-private-subnet-1`
-- Choose exsiting Security Group `aws-infra-03-database-sg`
-- No preference for maintenance window
-- Add tag `project : AWS-Infra-03-RDSCacheMQBeanstalkInfra`
+This pipeline automates build, code scanning, artifact management, image building, security scanning, and deployment to ECS and Nginx.
 
+🔸 Workflow Steps:
 
-### DB Initialization
+Backend (Java):
 
+- Checkout source code from GitHub
+- Run SonarCloud scan
+- Build with Maven
+- Push artifacts to JFrog Artifactory
+- Build Docker image
+- Scan image with Trivy
+- Push to AWS ECR
+- Deploy image to ECS
 
-### Setup application deploy with Elastic BeanStalk & Setup Auto Scaling Group with ALB
+Frontend (Static):
 
-- Create EC2 role with name `aws-infra-03-beanstalk-role` and attach some policy below:
-    - AWSElasticBeanstalkEnhancedHeath
-    - AWSElasticBeanstalkWebTier
-    - AWSElasticBeanstalkRoleSNS
-    - AWSElasticBeanstalkCustomPlatformforEC2Role
-    - AdministratorAccess-AWSElasticBeanstalk
-- Create application -> Choose Web server environment 
-- Give application name `aws-infra-03-beanstalk-app`
-- Give Environment name `aws-infra-03-beanstalk-env-dev`
-- Choose domain `aws-infra-03-vprofile`
-- Choose Platform type `Managed platform` -> Choose `Tomcat` -> Choose plarform branch `Tomcat 11` -> Choose platform version `5.6.1`
-- Do this command to choose correct platform name `aws elasticbeanstalk list-available-solution-stacks`
-- Choose sample application code
-- For Presets -> Choose `Custom configuration`
-- For service role -> Create and use new service role with name `aws-infra-03-beanstalk-service-role` 
-- For EC2 key pair, using same key from output in terraform/modules/bastion/output.tf
-- For EC2 instance profile -> Choose existing EC2 role with name `aws-infra-03-beanstalk-role`
-- For VPC, choose `aws-infra-03-vpc`, also choose Public IP address Activated and add private subnet `aws-infra-03-private-subnet-1` `aws-infra-03-private-subnet-2`
-- Add tag `project : AWS-Infra-03-RDSCacheMQBeanstalkInfra`
-- Choose exisiting security group `aws-infra-03-private-sg`
-- Choose Auto scaling Group with type `Load balanced` 
-    - Min 1 instances
-    - Max 2 instances
-    - Fleet composition `On-demand instances`
-    - Archiitecture `x86_64`
-    - Instance Type `t3.micro`
-    - Choose AMI ID `ami-0c1907b6d738188e5` 
-- For scaling triggers 
-    - Metric: NetworkOut
-    - Statistic: Average
-    - Unit: Bytes
-    - Period: 5 Min
-    - Breach duration 5 Min
-    - Upper threshold: 6000000
-    
-- For loadbalancer subnet, attach to `aws-infra-03-public-subnet-1` 
-- Loadbalancer Type `Application Load Balancer` with `Dedicated`
-- For listeners:
-    - Port: `80`
-    - Protocol: `HTTP`
-    - Health check path : 80, HTTP, path `/login` and enable session stickiness
-    - Add another listener, port 443, HTTPs, choose exsiting SSL Certificate ARN `arn:aws:acm:ap-southeast-1:143735903781:certificate/5ad129c2-f6e9-4840-be04-1ada1ae393da`
+- Checkout frontend code
+- Build static files (React/Angular/etc.)
+- Copy build output to Nginx EC2 server via SSH or deploy with S3 + CloudFront
 
-- Application deployments
-    - Policy `Rolling`
-    - Batch size `Percentage`, with `50%` at a time
+#### 📁 GitHub Actions Folder Structure:
+
+```
+.github/
+  workflows/
+    aj3-terraform-ci.yml
+    deploy-backend.yml
+    build-frontend.yml
+    deploy-frontend.yml
+
+```
+
+#### How to build CICD Terraform for automatically provisioning infrastructure
+
+[📘 Github Action CICD Terraform Infra](docs/AJ3-CICD-Infra.md)
 
 
-### Setup S3 bucket and S3 Endpoint Gateway
+### 2. Terraform Infrastructure Modules
 
+🔹 Overview
 
-### Setup Cloud Front with AWS Cert Manager
-- Create distribution and give origin domain `cloudtech.io.vn`
-- Protocol `Match viewer`, `HTTP port 80`, `HTTPs port 443` and `TLSv1`
-- Give a name for origin `cloudtech.io.vn`
-- Compress objects automatically `Yes`
-- Viewer
-    - Choose `HTTP and HTTPs` in Viewer protocol policy
-    - choose `GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE` in Allow HTTP methods
-    - Restrict viewer access `No`
-- Choose Price class `Use Asia..`
-- Not enbale AWS WAF web ACL
-- Choose custom domain name `cloudtech.io.vn`
-- Choose custom exisiting SSL Certificate `arn:aws:acm:ap-southeast-1:143735903781:certificate/5ad129c2-f6e9-4840-be04-1ada1ae393da`
-- Choose security policy `TLSv1`
-- Support HHTP versions `HTTP/2`
-- Standard logging `Off`
+All infrastructure is provisioned as modular Terraform code.
+
+🔸 Modules Breakdown
+
+#### 📦 Terraform Module Overview
+
+| Module         | Purpose                                                         |
+|----------------|-----------------------------------------------------------------|
+| `network`          | Create VPC, public/private subnets, IGW, NAT, and route tables, Transit Gateway  |
+| `security`     | Define and attach Security Groups  |
+| `bastion`      | Launch EC2 instance in public subnet for SSH access |
+| `nginx`        | Deploy EC2 instance for static frontend (Nginx server)          |
+| `database`     | Provision RDS (MySQL) with Multi-AZ, Amazon MQ (e.g., ActiveMQ), Memcached via ElastiCache |
+| `autoscaling`  | Set up Auto Scaling Group for application servers               |
+| `nlb`          | Configure public/private Network Load Balancers                 |
+| `iam`          | Create IAM roles and policies for EC2, ECS, and other services  |
+| `ecs`          | Create ECS cluster |
 
 
 
+#### 📁 Recommended Structure:
 
-### Setup monitoring Stack with CloudWatch, SNS, EvenBridh
+```
+terraform/
+├── modules/
+│   └── network/
+│       └── main.tf        
+│   └── bastion/
+│       └── main.tf        
+│   └── ecs/
+│       └── main.tf        
+│   └── security/
+│       └── main.tf        
+│   └── database/
+│       └── main.tf        
+├── envs/
+│   ├── dev/
+│   │   ├── main.tf
+│   │   ├── backend.tf
+│   │   └── terraform.tfvars
+│   ├── uat/
+│   │   ├── backend.tf
+│   │   └── terraform.tfvars
+│   └── pre-prod/
+│       ├── backend.tf
+│       └── terraform.tfvars
+└── variables.tf           # Common variable definitions
 
-## Step 2: Setup Github Action to automate deploy IaC Terraform (dev/prod)
+```
 
-- You need to check on this path `.github/workflows/terraform.yml` and run this workflow
+#### Create Separate Environments with Workspaces
 
-## Step 3: Deploy CI/CD pipeline on Github Action for automate build and upload image to ECR
-- You need to check on this path `repos/vprofile-project/.github/workflows/appbuild.yml` and run this workflow
+To use workspaces, eg. DEV environment
+
+```
+terraform workspace new dev
+terraform workspace select dev
+terraform apply -var-file="envs/dev/terraform.tfvars"
+
+```
+
+#### Use Environment-specific Variables
+
+```
+env_name       = "dev"
+vnet_name      = "dev-vnet"
+address_space  = "10.0.0.0/16"
+location       = "East US"
+resource_group = "rg-dev"
+
+```
+
+#### Use Separate Backends
+
+For state separation across environments, define different backends.
+
+Eg. `envs/dev/backend.tf`
+
+```
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state-bucket"   
+    key            = "dev/terraform.tfstate"        
+    region         = "us-east-1"                    
+    dynamodb_table = "terraform-locks"              
+    encrypt        = true                           
+  }
+}
+
+```
 
 
-## Refactor application with EKS cluster + OpenTeleMetry Stack
+### 3. Golden AMI Creation
+
+🔹 Overview
+
+Custom AMIs are created to speed up instance launch and enforce consistency.
+
+🔸 Global Base AMI
+
+Install: AWS CLI, CloudWatch Agent, SSM Agent
+
+🔸 Specialized AMIs:
+
+- Nginx AMI: Install nginx, configure memory metrics
+- Tomcat AMI: Install Tomcat, Java 11, systemd setup
+- Maven Build AMI: Install Maven, Git, Java 11, preconfigure environment
+
+📌 Optionally use Packer for automation.
+
+### 4. Monitoring & Logging
+
+#### 🔍 Monitoring & Logging
+
+| Tool           | Purpose                                                                 |
+|----------------|-------------------------------------------------------------------------|
+| `CloudWatch`   | Log and metric collection for EC2, RDS, and application components       |
+| `Cronjob + S3` | Push Tomcat logs to S3 and rotate local logs to save disk space         |
+| `Alarms`       | Trigger email alerts on threshold breaches (e.g., DB connections > 100) |
+| `SNS`          | Send notifications via Email/SMS when alarms are triggered              |
+
+
+### 5. Application Lifecycle
+
+#### 🔄 Application Lifecycle
+
+| Phase                   | Tasks                                                                 |
+|-------------------------|-----------------------------------------------------------------------|
+| `Pre-Deployment`        | Build custom AMIs, configure monitoring agents, SonarCloud & JFrog setup |
+| `Infrastructure Deployment` | Run Terraform pipelines to provision AWS infrastructure               |
+| `CI/CD Execution`       | Build, scan, and deploy applications using GitHub Actions workflows   |
+| `Post-Deployment`       | Set up CloudWatch alerts, validate deployment, and configure log rotation |
+
+
+## VI. Security Best Practices
+
+- Store secrets in GitHub Secrets or AWS Parameter Store
+- Use IAM roles, avoid access keys in pipelines
+- Principle of Least Privilege (SGs, IAM, S3 access)
+- S3 VPC Endpoint instead of public access
+- Enable logging: CloudTrail, VPC Flow Logs
+
