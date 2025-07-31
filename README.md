@@ -105,15 +105,21 @@ All infrastructure is provisioned as modular Terraform code.
 
 ```
 terraform/
-  modules/
-    vpc/
-    rds/
-    security/
-    compute/
-  main.tf
-  variables.tf
-  outputs.tf
-  backend.tf
+├── modules/
+│   └── network/
+│       └── main.tf        # Reusable module for VPC, Subnets, etc.
+│   └── compute/
+│       └── main.tf        # Reusable module for EC2, VM, etc.
+├── envs/
+│   ├── dev/
+│   │   ├── main.tf
+│   │   ├── backend.tf
+│   │   └── terraform.tfvars
+│   ├── uat/
+│   │   └── ...
+│   └── pre-prod/
+│       └── ...
+└── variables.tf           # Common variable definitions
 
 ```
 
