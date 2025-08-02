@@ -70,13 +70,13 @@ Frontend (Static):
 .github/
   workflows/
     aj3-terraform-ci.yml
-    deploy-backend.yml
-    build-frontend.yml
-    deploy-frontend.yml
+    aj3-build-cicd.yml
 
 ```
 
 #### Documentation for CICD
+
+[📘 Dependencies Installation ](docs/AJ3-prequisite-setup.md)
 
 [📘 Github Action CICD Terraform Infra](docs/AJ3-CICD-Infra.md)
 
@@ -98,7 +98,7 @@ All infrastructure is provisioned as modular Terraform code.
 | `network`          | Create VPC, public/private subnets, IGW, NAT, and route tables, Transit Gateway  |
 | `security`     | Define and attach Security Groups  |
 | `bastion`      | Launch EC2 instance in public subnet for SSH access |
-| `nginx`        | Deploy EC2 instance for static frontend (Nginx server)          |
+| `nginx`        | Deploy EC2 instance for static frontend (Nginx server), install sonarqube server          |
 | `database`     | Provision RDS (MySQL) with Multi-AZ, Amazon MQ (e.g., ActiveMQ), Memcached via ElastiCache |
 | `autoscaling`  | Set up Auto Scaling Group for application servers               |
 | `nlb`          | Configure public/private Network Load Balancers                 |
@@ -136,6 +136,10 @@ terraform/
 └── variables.tf           # Common variable definitions
 
 ```
+#### Terraform design module
+
+![alt text](aj3-terraform-module-design.drawio.png)
+
 
 #### Create Separate Environments with Workspaces
 

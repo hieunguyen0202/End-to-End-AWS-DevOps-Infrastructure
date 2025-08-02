@@ -12,17 +12,26 @@ on:
           - dev
           - uat
           - pre-prod
+      action:
+        description: 'Select Terraform action'
+        required: true
+        default: 'create'
+        type: choice
+        options:
+          - create
+          - destroy
+
 
 jobs:
   terraform:
-    name: Deploy to ${{ github.event.inputs.environment }}
+    name: Terraform ${{ github.event.inputs.action }} on ${{ github.event.inputs.environment }}
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
 
     env:
-      AWS_REGION: us-east-1
+      AWS_REGION: ap-southeast-1
 
     steps:
       - name: Checkout code
@@ -50,14 +59,20 @@ jobs:
           cd terraform/envs/${{ github.event.inputs.environment }}
           terraform plan -var-file="terraform.tfvars"
 
-      - name: Terraform Apply (dev/uat)
-        if: ${{ github.event.inputs.environment != 'pre-prod' }}
+      - name: Terraform Apply (dev/uat only)
+        if: ${{ github.event.inputs.environment != 'pre-prod' && github.event.inputs.action == 'create' }}
         run: |
           cd terraform/envs/${{ github.event.inputs.environment }}
           terraform apply -var-file="terraform.tfvars" -auto-approve
 
       - name: Manual Approval Required (pre-prod)
-        if: ${{ github.event.inputs.environment == 'pre-prod' }}
+        if: ${{ github.event.inputs.environment == 'pre-prod' && github.event.inputs.action == 'create' }}
         run: |
           echo "Manual approval required before applying to PRE-PROD."
           echo "Skipping auto-apply. Please review and apply manually if needed."
+      
+      - name: Terraform Destroy
+        if: ${{ github.event.inputs.action == 'destroy' }}
+        run: |
+          cd terraform/envs/${{ github.event.inputs.environment }}
+          terraform destroy -var-file="terraform.tfvars" -auto-approve
