@@ -138,7 +138,7 @@ terraform/
 ```
 #### Terraform design module
 
-
+![alt text](aj3-terraform-module-design.drawio.png)
 
 
 #### Create Separate Environments with Workspaces
