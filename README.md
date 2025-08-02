@@ -78,6 +78,8 @@ Frontend (Static):
 
 #### Documentation for CICD
 
+[📘 Dependencies Installation ](docs/AJ3-prequisite-setup.md)
+
 [📘 Github Action CICD Terraform Infra](docs/AJ3-CICD-Infra.md)
 
 [📘 Github Action CICD for Build Docker Image](docs/AJ3-CICD-build.md)

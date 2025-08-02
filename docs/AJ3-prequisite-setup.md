@@ -1,3 +1,5 @@
+# 📘 [AJ3] Dependencies Installation 
+
 ### Steps to Install Terraform on CentOS Stream 8:
 
 Install yum-utils: This package provides yum-config-manager, which is needed to manage your repositories.
