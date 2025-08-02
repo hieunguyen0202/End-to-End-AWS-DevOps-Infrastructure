@@ -22,7 +22,7 @@ jobs:
         shell: bash
 
     env:
-      AWS_REGION: us-east-1
+      AWS_REGION: ap-southeast-1
 
     steps:
       - name: Checkout code
