@@ -201,3 +201,35 @@ resource "aws_route_table_association" "bastion_public" {
   subnet_id      = aws_subnet.bastion_public.id
   route_table_id = aws_route_table.bastion_public.id
 }
+
+
+# Create VPC Peering Connection
+
+resource "aws_vpc_peering_connection" "main_bastion" {
+  vpc_id        = aws_vpc.main.id
+  peer_vpc_id   = aws_vpc.bastion.id
+  auto_accept   = true
+
+  tags = merge(
+    local.tags,
+    {
+      Name = "${var.project}-main-bastion-peering"
+    }
+  )
+}
+
+# Add Route to Main VPC Route Table (pointing to Bastion
+
+resource "aws_route" "main_to_bastion" {
+  route_table_id         = aws_route_table.private.id
+  destination_cidr_block = var.cidr_bastion_block
+  vpc_peering_connection_id = aws_vpc_peering_connection.main_bastion.id
+}
+
+#  Add Route to Bastion VPC Route Table (pointing to Main)
+
+resource "aws_route" "bastion_to_main" {
+  route_table_id         = aws_route_table.bastion_public.id
+  destination_cidr_block = var.cidr_block
+  vpc_peering_connection_id = aws_vpc_peering_connection.main_bastion.id
+}
