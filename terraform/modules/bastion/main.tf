@@ -42,6 +42,10 @@ resource "aws_instance" "bastion" {
     }
   }
 
+  provisioner "local-exec" {
+    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u ubuntu --key-file ansible.pem -T 300 -i '${self.public_ip},', playbook.yaml"
+  }
+
   root_block_device {
     volume_size = var.volume_size
     volume_type = "gp2"
