@@ -1,0 +1,3 @@
+# Ignore all Terraform working directories and lock files
+.terraform/
+.terraform.lock.hcl
