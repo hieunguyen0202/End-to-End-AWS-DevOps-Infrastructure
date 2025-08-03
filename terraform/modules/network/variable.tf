@@ -37,3 +37,23 @@ variable "availability_zones" {
   description = "List of availability zones"
   type        = list(string)
 }
+
+variable "internet_gateway_name" {
+  description = "internet_gateway_name"
+  type        = string
+}
+
+variable "public_rt_name" {
+  description = "public_rt_name"
+  type        = string
+}
+
+variable "nat_gateway_name" {
+  description = "nat_gateway_name"
+  type        = string
+}
+
+variable "private_rt_name" {
+  description = "public_rt_name"
+  type        = string
+}
