@@ -57,3 +57,33 @@ variable "private_rt_name" {
   description = "public_rt_name"
   type        = string
 }
+
+variable "vpc_bastion_name" {
+  description = "Name of the bastion VPC"
+  type        = string
+}
+
+variable "cidr_bastion_block" {
+  description = "CIDR block for the bastion VPC"
+  type        = string
+}
+
+variable "public_bastion_subnets" {
+  description = "List of bastion public subnet CIDR blocks"
+  type        = list(string)
+}
+
+variable "public_bastion_subnet_name" {
+  description = "Names for bastion public subnet"
+  type        = string
+}
+
+variable "bastion_internet_gateway_name" {
+  description = "bastion_internet_gateway_name"
+  type        = string
+}
+
+variable "bastion_public_rt_name" {
+  description = "bastion_public_rt_name"
+  type        = string
+}

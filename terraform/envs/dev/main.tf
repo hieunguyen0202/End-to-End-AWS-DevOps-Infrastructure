@@ -24,17 +24,23 @@ resource "aws_resourcegroups_group" "resourcegroups_group" {
 }
 
 module "network" {
-  source                = "../../modules/network"
-  vpc_name              = var.vpc_name
-  cidr_block            = var.cidr_block
-  project               = var.project
-  public_subnets        = var.public_subnets
-  private_subnets       = var.private_subnets
-  public_subnet_names   = var.public_subnet_names
-  private_subnet_names  = var.private_subnet_names
-  availability_zones    = var.availability_zones
-  internet_gateway_name = var.internet_gateway_name
-  public_rt_name        = var.public_rt_name
-  private_rt_name       = var.private_rt_name
-  nat_gateway_name      = var.nat_gateway_name
+  source                        = "../../modules/network"
+  vpc_name                      = var.vpc_name
+  cidr_block                    = var.cidr_block
+  project                       = var.project
+  public_subnets                = var.public_subnets
+  private_subnets               = var.private_subnets
+  public_subnet_names           = var.public_subnet_names
+  private_subnet_names          = var.private_subnet_names
+  availability_zones            = var.availability_zones
+  internet_gateway_name         = var.internet_gateway_name
+  public_rt_name                = var.public_rt_name
+  private_rt_name               = var.private_rt_name
+  nat_gateway_name              = var.nat_gateway_name
+  vpc_bastion_name              = var.vpc_bastion_name
+  cidr_bastion_block            = var.cidr_bastion_block
+  public_bastion_subnets        = var.public_bastion_subnets
+  public_bastion_subnet_name    = var.public_bastion_subnet_name
+  bastion_internet_gateway_name = var.bastion_internet_gateway_name
+  bastion_public_rt_name        = var.bastion_public_rt_name
 }
