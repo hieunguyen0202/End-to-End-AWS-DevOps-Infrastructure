@@ -4,6 +4,6 @@ terraform {
     key    = "dev/terraform.tfstate"
     region = "ap-southeast-1"
     encrypt        = true
-    dynamodb_table = "terraform-series-s3-backend"
+    dynamodb_table = "aj3-aws-infra-project-s3-backend"
   }
 }
