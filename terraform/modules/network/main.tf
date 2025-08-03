@@ -1,6 +1,7 @@
 locals {
   tags = {
     project     = var.project
+    Name        = var.vpc_name
   }
 }
 
