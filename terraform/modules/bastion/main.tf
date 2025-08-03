@@ -1,8 +1,13 @@
-# modules/bastion/main.tf
+locals {
+  tags = {
+    project     = var.project
+  }
+}
+
 
 resource "aws_key_pair" "bastion_key" {
   key_name   = var.key_name
-  public_key = file("${path.module}/keypair/aws-infra-01-key.pub")
+  public_key = file("${path.module}/keypair/aj3-aws-infra-bastion-key.pub")
 }
 
 
@@ -24,7 +29,10 @@ resource "aws_instance" "bastion" {
     volume_type = "gp2"
   }
 
-  tags = {
-    Name = var.instance_name
-  }
+  tags = merge(
+      local.tags,
+      {
+        Name = var.instance_name
+      }
+  )
 }

@@ -53,4 +53,17 @@ module "security" {
   app_sg_name       = var.app_sg_name
   bastion_sg_name   = var.bastion_sg_name
   database_sg_name  = var.database_sg_name
+  project           = var.project
+}
+
+module "bastion" {
+  source                 = "../../modules/bastion"
+  ami_id                 = var.ami_id
+  instance_type          = var.instance_type
+  key_name               = var.key_name
+  subnet_id              = module.network.aws_bastion_subnet_public_id
+  vpc_security_group_ids = [module.security.bastion_security_group_id]
+  instance_name          = var.instance_name
+  volume_size            = var.volume_size
+  project                = var.project
 }

@@ -1,3 +1,8 @@
+variable "project" {
+  description = "The project name to use for unique resource naming"
+  type        = string
+}
+
 variable "ami_id" {
   description = "AMI ID for Ubuntu Server"
   type        = string
@@ -24,7 +29,6 @@ variable "vpc_security_group_ids" {
 }
 
 variable "instance_name" {
-  default     = "aws-infra-01-bastion-vm"
   description = "Name tag for the bastion instance"
   type        = string
 }

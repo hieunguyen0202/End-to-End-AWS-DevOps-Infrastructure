@@ -115,3 +115,31 @@ variable "database_sg_name" {
   type        = string
   description = "Name of the database security group"
 }
+
+# Bastion module
+
+variable "ami_id" {
+  description = "AMI ID for Ubuntu Server"
+  type        = string
+}
+
+variable "instance_type" {
+  default     = "t3.small"
+  description = "EC2 instance type"
+}
+
+variable "key_name" {
+  description = "SSH key pair name"
+  type        = string
+}
+
+variable "instance_name" {
+  description = "Name tag for the bastion instance"
+  type        = string
+}
+
+variable "volume_size" {
+  default     = 10
+  description = "Root volume size in GiB"
+  type        = number
+}

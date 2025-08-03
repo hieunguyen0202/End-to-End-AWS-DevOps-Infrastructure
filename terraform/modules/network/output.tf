@@ -5,3 +5,7 @@ output "vpc2_id" {
 output "vpc1_id" {
   value = aws_vpc.bastion.id
 }
+
+output "aws_bastion_subnet_public_id" {
+  value = aws_subnet.bastion_public.id
+}
