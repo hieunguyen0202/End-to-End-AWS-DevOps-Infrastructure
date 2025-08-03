@@ -19,7 +19,6 @@
 
 ![alt text](End-to-End-AWS-DevOps-Infrastructure.drawio.svg)
 
-
 ## II. High-Level Architecture
 
 Provide a visual representation of:
