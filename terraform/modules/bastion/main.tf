@@ -113,7 +113,7 @@ resource "aws_instance" "bastion" {
 resource "aws_instance" "nginx" {
   ami                         = var.ami_id
   instance_type               = var.instance_type
-  subnet_id                   = var.subnet_id
+  subnet_id                   = var.nginx_subnet_id
   vpc_security_group_ids      = var.nginx_security_group_id
   key_name                    = aws_key_pair.bastion_key.key_name
   associate_public_ip_address = false  # Private instance, access via bastion

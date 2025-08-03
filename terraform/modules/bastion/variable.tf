@@ -49,3 +49,8 @@ variable "nginx_instance_name" {
   description = "Name tag for the nginx instance"
   type        = string
 }
+
+variable "nginx_subnet_id" {
+  description = "Public subnet ID for nginx"
+  type        = string
+}

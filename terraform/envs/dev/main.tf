@@ -62,6 +62,7 @@ module "bastion" {
   instance_type             = var.instance_type
   key_name                  = var.key_name
   subnet_id                 = module.network.aws_bastion_subnet_public_id
+  nginx_subnet_id           = module.network.aws_nginx_subnet_public_id
   bastion_security_group_id = [module.security.bastion_security_group_id]
   nginx_security_group_id   = [module.security.nginx_security_group_id]
   instance_name             = var.instance_name
