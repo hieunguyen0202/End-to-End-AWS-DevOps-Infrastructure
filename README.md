@@ -76,6 +76,8 @@ Frontend (Static):
 
 #### Documentation for CICD
 
+[📘 How to setup terraform with Ansible ](https://devopsvn.tech/terraform-series/terraform/bai-13-ansible-with-terraform)
+
 [📘 Dependencies Installation ](docs/AJ3-prequisite-setup.md)
 
 [📘 Github Action CICD Terraform Infra](docs/AJ3-CICD-Infra.md)
