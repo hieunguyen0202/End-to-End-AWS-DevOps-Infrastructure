@@ -44,3 +44,13 @@ module "network" {
   bastion_internet_gateway_name = var.bastion_internet_gateway_name
   bastion_public_rt_name        = var.bastion_public_rt_name
 }
+
+module "security" {
+  source            = "../../modules/security"
+  vpc1_id           = module.network.vpc1_id
+  vpc2_id           = module.network.vpc2_id
+  nginx_sg_name     = var.nginx_sg_name
+  app_sg_name       = var.app_sg_name
+  bastion_sg_name   = var.bastion_sg_name
+  database_sg_name  = var.database_sg_name
+}

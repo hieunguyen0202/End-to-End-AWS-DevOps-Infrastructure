@@ -93,3 +93,25 @@ variable "bastion_public_rt_name" {
   description = "bastion_public_rt_name"
   type        = string
 }
+
+# Security Group Module
+
+variable "nginx_sg_name" {
+  type        = string
+  description = "Name of the nginx security group"
+}
+
+variable "app_sg_name" {
+  type        = string
+  description = "Name of the app security group"
+}
+
+variable "bastion_sg_name" {
+  type        = string
+  description = "Name of the bastion security group"
+}
+
+variable "database_sg_name" {
+  type        = string
+  description = "Name of the database security group"
+}

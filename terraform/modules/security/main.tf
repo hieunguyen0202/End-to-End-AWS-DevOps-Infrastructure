@@ -1,7 +1,14 @@
-resource "aws_security_group" "public_sg" {
-  name        = var.public_sg_name
+locals {
+  tags = {
+    project = var.project
+  }
+}
+
+
+resource "aws_security_group" "nginx_sg" {
+  name        = var.nginx_sg_name
   description = "Allow HTTP/HTTPS traffic from internet"
-  vpc_id      = var.vpc_id
+  vpc_id      = var.vpc2_id
 
   ingress {
     from_port   = 80
@@ -24,28 +31,31 @@ resource "aws_security_group" "public_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = var.public_sg_name
-  }
+  tags = merge(
+      local.tags,
+      {
+        Name = var.nginx_sg_name
+      }
+  )
 }
 
-resource "aws_security_group" "private_sg" {
-  name        = var.private_sg_name
-  description = "Allow app ports from public SG"
-  vpc_id      = var.vpc_id
+resource "aws_security_group" "app_sg" {
+  name        = var.app_sg_name
+  description = "Allow app ports from NGINX SG"
+  vpc_id      = var.vpc2_id
 
   ingress {
     from_port       = 3000
     to_port         = 3000
     protocol        = "tcp"
-    security_groups = [aws_security_group.public_sg.id]
+    security_groups = [aws_security_group.nginx_sg.id]
   }
 
   ingress {
     from_port       = 8080
     to_port         = 8080
     protocol        = "tcp"
-    security_groups = [aws_security_group.public_sg.id]
+    security_groups = [aws_security_group.nginx_sg.id]
   }
 
   egress {
@@ -55,15 +65,19 @@ resource "aws_security_group" "private_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = var.private_sg_name
-  }
+  tags = merge(
+      local.tags,
+      {
+        Name = var.app_sg_name
+      }
+  )
+
 }
 
 resource "aws_security_group" "bastion_sg" {
   name        = var.bastion_sg_name
   description = "Bastion host SG"
-  vpc_id      = var.vpc_id
+  vpc_id      = var.vpc1_id
 
   ingress {
     from_port   = 22
@@ -79,15 +93,19 @@ resource "aws_security_group" "bastion_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = var.bastion_sg_name
-  }
+  tags = merge(
+      local.tags,
+      {
+        Name = var.bastion_sg_name
+      }
+  )
+
 }
 
 resource "aws_security_group" "database_sg" {
   name        = var.database_sg_name
   description = "Allow MongoDB from private and bastion SGs"
-  vpc_id      = var.vpc_id
+  vpc_id      = var.vpc2_id
 
   # Allow from private SG
   ingress {
@@ -95,7 +113,7 @@ resource "aws_security_group" "database_sg" {
     from_port       = 0
     to_port         = 65535
     protocol        = "tcp"
-    security_groups = [aws_security_group.private_sg.id]
+    security_groups = [aws_security_group.app_sg.id]
   }
 
   # Allow from bastion SG
@@ -123,32 +141,13 @@ resource "aws_security_group" "database_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = var.database_sg_name
-  }
+  tags = merge(
+      local.tags,
+      {
+        Name = var.database_sg_name
+      }
+  )
 }
 
-// Secrets Manager for Password RDS
 
-resource "aws_secretsmanager_secret" "rds_password" {
-  name = "aws-infra-03-rds-password-2"
-  description = "RDS master password for MySQL"
-}
-
-resource "aws_secretsmanager_secret_version" "rds_password_version" {
-  secret_id     = aws_secretsmanager_secret.rds_password.id
-  secret_string = "strong_password"
-}
-
-// Secrets Manager for Amamzon MQ
-
-resource "aws_secretsmanager_secret" "rmq_password" {
-  name = "aws-infra-03-rmq-password-2"
-  description = "Password for Amamzon MQ"
-}
-
-resource "aws_secretsmanager_secret_version" "rmq_password_version" {
-  secret_id     = aws_secretsmanager_secret.rmq_password.id
-  secret_string = "strong_password"
-}
 
