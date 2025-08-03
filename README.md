@@ -33,7 +33,123 @@ Provide a visual representation of:
 - Security (IAM, SGs, Encryption)
 
 
-## III. Repository Structure
+## III. High-Level Goals for 99.95% SLA
+
+### Availability & Resilience Strategy
+
+| **Area**              | **Objective**                                                       |
+|-----------------------|---------------------------------------------------------------------|
+| **High Availability** | Avoid single points of failure (use Multi-AZ & AutoFailover)       |
+| **Data Durability**   | Enable automated backups and cross-region replication              |
+| **Minimal Downtime**  | Use safe deployment strategies (`create_before_destroy`)           |
+| **Disaster Recovery** | Define and test DR runbooks (manual + automated recovery)          |
+| **Monitoring & Alerts** | Detect failures fast with alarms and metrics                     |
+
+
+### Multi-AZ RDS for High Availability
+
+#### ☑️ Terraform Task
+
+- Use multi_az = true in your RDS configuration.
+- Choose instance class that supports Multi-AZ (e.g., db.m6g.large or above).
+
+```
+resource "aws_db_instance" "primary" {
+  identifier         = "app-prod-db"
+  engine             = "mysql"
+  instance_class     = "db.m6g.large"
+  multi_az           = true
+  ...
+}
+```
+
+#### ☑️ Outcome
+
+- Failover to standby in the other AZ within 1–2 minutes.
+- AWS manages data replication between AZs.
+
+
+### Cross-Region Backups
+
+#### ☑️ Terraform Task
+
+- Enable `backup_retention_period` and `copy_tags_to_snapshot`
+- Use `aws_db_snapshot` and `aws_db_snapshot_copy` for cross-region copies.
+
+```
+resource "aws_db_snapshot_copy" "cross_region" {
+  source_db_snapshot_identifier = aws_db_snapshot.primary_snapshot.id
+  target_db_snapshot_identifier = "db-copy-${timestamp()}"
+  kms_key_id                    = aws_kms_key.replica.arn
+  source_region                 = var.primary_region
+}
+```
+
+#### ☑️ Outcome
+- Backups stored securely in another region for DR readiness.
+
+### Safe Deployments with create_before_destroy
+
+#### ☑️ Terraform Task
+
+- Use lifecycle blocks on resources like:
+  - Security groups
+  - IAM roles
+  - Subnets / route tables
+  - NLBs
+  - EC2 instances
+
+```
+resource "aws_security_group" "db_sg" {
+  name = "db-sg"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+```
+
+#### ☑️ Outcome
+
+- Avoids downtime when updating critical infra like SGs or route tables.
+
+### Disaster Recovery (DR) Playbook
+
+#### ☑️ Manual or Automated Steps
+
+- Document procedures to restore from cross-region snapshot:
+  - Launch RDS from snapshot
+  - Update DNS or failover route in Route 53
+- Terraform module to quickly stand up infrastructure in secondary region
+
+#### ☑️ Automation Tip:
+- Use `terraform workspace` or terragrunt to replicate infra to secondary region.
+
+
+### Monitoring, Alarms, and Failover Automation
+
+- Use CloudWatch Alarms:
+  - RDS status checks
+  - Freeable memory, CPU, storage thresholds
+
+```
+resource "aws_cloudwatch_metric_alarm" "rds_high_cpu" {
+  alarm_name          = "rds-high-cpu"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/RDS"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 80
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  dimensions = {
+    DBInstanceIdentifier = aws_db_instance.primary.id
+  }
+}
+
+```
 
 
 ## IV. Module Documentation
