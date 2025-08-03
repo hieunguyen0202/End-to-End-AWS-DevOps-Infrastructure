@@ -32,4 +32,5 @@ ami_id        = "ami-0c1907b6d738188e5"
 instance_type = "t3.small"
 key_name      = "aj3-aws-infra-vpc1-key-dev"
 instance_name = "aj3-aws-infra-vpc1-bastion-vm-dev"
+nginx_instance_name = "aj3-aws-infra-vpc2-nginx-vm-dev"
 volume_size   = 10

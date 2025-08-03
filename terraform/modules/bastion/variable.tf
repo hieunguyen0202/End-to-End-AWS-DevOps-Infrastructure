@@ -23,8 +23,14 @@ variable "subnet_id" {
   type        = string
 }
 
-variable "vpc_security_group_ids" {
+variable "bastion_security_group_id" {
   description = "List of security group IDs"
+  type        = list(string)
+}
+
+
+variable "nginx_security_group_id" {
+  description = "Security Group ID for nginx server"
   type        = list(string)
 }
 
@@ -37,4 +43,9 @@ variable "volume_size" {
   default     = 10
   description = "Root volume size in GiB"
   type        = number
+}
+
+variable "nginx_instance_name" {
+  description = "Name tag for the nginx instance"
+  type        = string
 }

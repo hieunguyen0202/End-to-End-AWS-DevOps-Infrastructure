@@ -1,7 +1,7 @@
-output "public_security_group_id" {
+output "nginx_security_group_id" {
   value = aws_security_group.nginx_sg.id
 }
-output "private_security_group_id" {
+output "app_security_group_id" {
   value = aws_security_group.app_sg.id
 }
 output "database_security_group_id" {

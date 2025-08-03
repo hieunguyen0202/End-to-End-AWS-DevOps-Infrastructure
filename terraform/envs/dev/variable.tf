@@ -143,3 +143,8 @@ variable "volume_size" {
   description = "Root volume size in GiB"
   type        = number
 }
+
+variable "nginx_instance_name" {
+  description = "Name tag for the nginx instance"
+  type        = string
+}
