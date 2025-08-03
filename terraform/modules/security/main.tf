@@ -122,7 +122,7 @@ resource "aws_security_group" "database_sg" {
     from_port       = 0
     to_port         = 65535
     protocol        = "tcp"
-    security_groups = [aws_security_group.bastion_sg.id]
+    security_groups = [aws_security_group.nginx_sg.id]
   }
 
   # Allow self-communication inside the database SG
