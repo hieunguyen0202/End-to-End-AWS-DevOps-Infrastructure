@@ -72,3 +72,8 @@ variable "aws_ecs_service" {
   type        = string
   description = "Name of the ECS service"
 }
+
+variable "vpc2_id" {
+  description = "The ID of the main VPC"
+  type        = string
+}

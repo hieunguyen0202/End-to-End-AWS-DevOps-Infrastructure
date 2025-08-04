@@ -5,6 +5,52 @@ locals {
 }
 
 
+# Terraform – Create NLB + Target Group + Listener
+# Network Load Balancer
+resource "aws_lb" "app_nlb" {
+  name               = "ecs-nlb"
+  internal           = true
+  load_balancer_type = "network"
+  subnets            = var.private_subnet_ids
+
+  tags = local.tags
+}
+
+# Target Group
+resource "aws_lb_target_group" "app_tg" {
+  name        = "ecs-tg"
+  port        = var.container_port
+  protocol    = "TCP"
+  target_type = "ip"
+  vpc_id      = var.vpc2_id
+
+  health_check {
+    protocol            = "TCP"
+    port                = var.container_port
+    interval            = 30
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
+
+  tags = local.tags
+}
+
+# Listener
+resource "aws_lb_listener" "app_listener" {
+  load_balancer_arn = aws_lb.app_nlb.arn
+  port              = var.container_port
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app_tg.arn
+  }
+}
+
+
+
+
+
 # --- ECR Repository ---
 resource "aws_ecr_repository" "app_repo" {
   name = var.ecr_repo_name
@@ -115,6 +161,15 @@ resource "aws_ecs_service" "app_service" {
     security_groups  = [var.app_security_group_id]
     assign_public_ip = false
   }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.app_tg.arn
+    container_name   = var.backend_service_name
+    container_port   = var.container_port
+  }
+
+  depends_on = [aws_lb_listener.app_listener]
+
 
   tags = merge(
       local.tags,
