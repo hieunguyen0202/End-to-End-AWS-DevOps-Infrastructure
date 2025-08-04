@@ -63,6 +63,17 @@ resource "aws_instance" "bastion" {
     }
   }
 
+  provisioner "file" {
+    source      = "${path.module}/keypair/nginx.conf.j2"
+    destination = "/home/ubuntu/nginx.conf.j2"
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("${path.module}/keypair/aj3-aws-infra-bastion-key")
+      host        = self.public_ip
+    }
+  }
+
   # Step 2: Install Ansible
   provisioner "remote-exec" {
     inline = [
