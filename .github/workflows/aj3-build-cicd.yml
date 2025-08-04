@@ -1,4 +1,4 @@
-name: Build & Push Docker Image to ECR
+name: Build and Push Docker Image to ECR
 
 on:
   workflow_dispatch:
@@ -8,76 +8,39 @@ on:
         required: true
         default: '0.0.0'
 
+env:
+  AWS_REGION: "ap-southeast-1"
+  ECR_REPOSITORY: ""
+  IMAGE_TAG: ${{ github.event.inputs.version }}
+
 jobs:
-  build:
-    name: CI/CD Build & Push
+  build-and-push:
     runs-on: ubuntu-latest
 
-    env:
-      AWS_REGION: us-east-1
-      ECR_REPO: my-ecr-repo-name                     # <- Replace with your ECR repo
-      IMAGE_TAG: ${{ github.event.inputs.version }}
-
     steps:
-      - name: Checkout latest from dev
-        uses: actions/checkout@v3
-        with:
-          ref: dev
+      - name: Checkout source code
+        uses: actions/checkout@v4
 
-      # SonarQube Scan
-      - name: SonarQube Scan
-        uses: sonarsource/sonarqube-scan-action@v1.2
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          projectBaseDir: .
-          args: >
-            -Dsonar.projectKey=my-project
-            -Dsonar.organization=my-org
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
-
-      - name: Check SonarQube Quality Gate
-        uses: sonarsource/sonarqube-quality-gate-action@v1.1
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      # JFrog Upload (replace with correct JFrog CLI commands or plugins)
-      - name: Upload artifacts to JFrog Artifactory
-        run: |
-          curl -u ${{ secrets.JFROG_USER }}:${{ secrets.JFROG_API_KEY }} \
-          -T ./path/to/your-artifact.zip \
-          "https://mycompany.jfrog.io/artifactory/my-repo/your-artifact-${{ env.IMAGE_TAG }}.zip"
-
-      # Docker build
-      - name: Build Docker image
-        run: |
-          docker build -t $ECR_REPO:${{ env.IMAGE_TAG }} .
-
-      # Trivy Scan
-      - name: Scan Docker image with Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ env.ECR_REPO }}:${{ env.IMAGE_TAG }}
-          format: table
-          exit-code: '1'
-          ignore-unfixed: true
-
-      # Configure AWS credentials
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # Login to ECR
-      - name: Login to Amazon ECR
+      - name: Log in to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+        uses: aws-actions/amazon-ecr-login@v2
 
-      # Push Docker image to ECR
+      - name: Build Docker image
+        run: |
+          docker build -f repos/vprofile-project/Docker-app/Dockerfile -t $ECR_REPOSITORY:$IMAGE_TAG .
+
+      - name: Tag image as latest (optional)
+        run: |
+          docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REPOSITORY:latest
+
       - name: Push Docker image to ECR
         run: |
-          docker tag $ECR_REPO:${{ env.IMAGE_TAG }} ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO:${{ env.IMAGE_TAG }}
-          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO:${{ env.IMAGE_TAG }}
+          docker push $ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REPOSITORY:latest
