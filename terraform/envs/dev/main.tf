@@ -70,3 +70,20 @@ module "bastion" {
   volume_size               = var.volume_size
   project                   = var.project
 }
+
+
+module "ecs-cluster" {
+  source                        = "../../modules/ecs-cluster"
+  ecr_repo_name                 = var.ecr_repo_name
+  aws_ecs_cluster_name          = var.aws_ecs_cluster_name
+  aws_ecs_task_definition_name  = var.aws_ecs_task_definition_name
+  backend_task_family           = var.backend_task_family
+  backend_service_name          = var.backend_service_name
+  backend_image_tag             = var.backend_image_tag
+  container_port                = var.container_port
+  host_port                     = var.host_port
+  private_subnet_ids            = module.network.aws_app_subnet_private_ids
+  app_security_group_id         = module.security.app_security_group_id
+  aws_ecs_service               = var.aws_ecs_service
+  project                       = var.project
+}

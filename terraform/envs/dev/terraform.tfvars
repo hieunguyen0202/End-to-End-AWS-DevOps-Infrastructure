@@ -34,3 +34,14 @@ key_name      = "aj3-aws-infra-vpc1-key-dev"
 instance_name = "aj3-aws-infra-vpc1-bastion-vm-dev"
 nginx_instance_name = "aj3-aws-infra-vpc2-nginx-vm-dev"
 volume_size   = 10
+
+# ECS module
+ecr_repo_name                 = "aj3-aws-infra-ecr-repo-dev"
+aws_ecs_cluster_name          = "aj3-aws-infra-ecs-cluster-dev"
+aws_ecs_task_definition_name  = "aj3-aws-infra-ecs-task-def-dev"
+backend_task_family           = "aj3-aws-infra-ecs-backend-task-dev"
+backend_service_name          = "aj3-aws-infra-ecs-app-tomcat-dev"
+backend_image_tag             = "latest"
+container_port                = 8080
+host_port                     = 8080
+aws_ecs_service               = "aj3-aws-infra-ecs-service-dev"
