@@ -40,6 +40,18 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_attach" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# Create a CloudWatch Log Group
+resource "aws_cloudwatch_log_group" "ecs_log_group" {
+  name              = "/ecs/${var.backend_service_name}"
+  retention_in_days = 7
+
+  tags = local.tags
+}
+
+
+
+
+
 # --- ECS Cluster ---
 resource "aws_ecs_cluster" "ecs_cluster" {
   name = var.aws_ecs_cluster_name
@@ -70,7 +82,15 @@ resource "aws_ecs_task_definition" "app_task" {
         containerPort = var.container_port,
         hostPort      = var.host_port,
         protocol      = "tcp"
-      }]
+      }],
+        logConfiguration = {
+          logDriver = "awslogs",
+          options = {
+            awslogs-group         = "/ecs/${var.backend_service_name}"
+            awslogs-region        = var.aws_region
+            awslogs-stream-prefix = "ecs"
+          }
+        }
     }
   ])
 

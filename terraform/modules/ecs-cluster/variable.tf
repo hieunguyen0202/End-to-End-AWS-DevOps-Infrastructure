@@ -51,6 +51,12 @@ variable "host_port" {
 }
 
 
+variable "aws_region" {
+  type        = string
+  description = "AWS region"
+  default     = "ap-southeast-1"
+}
+
 
 variable "private_subnet_ids" {
   type        = list(string)

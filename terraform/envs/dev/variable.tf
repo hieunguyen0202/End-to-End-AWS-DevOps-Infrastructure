@@ -205,3 +205,4 @@ variable "aws_ecs_service" {
   type        = string
   description = "Name of the ECS service"
 }
+
