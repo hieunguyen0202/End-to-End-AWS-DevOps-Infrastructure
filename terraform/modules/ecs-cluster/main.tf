@@ -12,7 +12,7 @@ resource "aws_lb" "app_nlb" {
   internal           = true
   load_balancer_type = "network"
   subnets            = var.private_subnet_ids
-
+  
   tags = local.tags
 }
 
