@@ -25,10 +25,6 @@ variable "nginx_sg_name" {
   description = "Name of the nginx security group"
 }
 
-variable "private_nlb_sg_name" {
-  type        = string
-  description = "Name of Private NLB Security Group"
-}
 
 variable "app_sg_name" {
   type        = string

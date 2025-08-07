@@ -24,7 +24,6 @@ bastion_public_rt_name = "aj3-aws-infra-vpc1-rtb-dev"
 # SG module
 public_nlb_sg_name   = "aj3-aws-infra-vpc2-public-nlb-sg-dev"
 nginx_sg_name   = "aj3-aws-infra-vpc2-nginx-sg-dev"
-private_nlb_sg_name   = "aj3-aws-infra-vpc2-private-nlb-sg-dev"
 app_sg_name  = "aj3-aws-infra-vpc2-app-sg-dev"
 bastion_sg_name  = "aj3-aws-infra-vpc1-bastion-sg-dev"
 database_sg_name = "aj3-aws-infra-vpc2-db-sg-dev"

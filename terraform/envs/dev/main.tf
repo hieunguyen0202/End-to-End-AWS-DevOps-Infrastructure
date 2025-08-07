@@ -51,7 +51,6 @@ module "security" {
   vpc2_id           = module.network.vpc2_id
   public_nlb_sg_name     = var.public_nlb_sg_name
   nginx_sg_name     = var.nginx_sg_name
-  # private_nlb_sg_name    = var.private_nlb_sg_name
   app_sg_name       = var.app_sg_name
   bastion_sg_name   = var.bastion_sg_name
   database_sg_name  = var.database_sg_name
