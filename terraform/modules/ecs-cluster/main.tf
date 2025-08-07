@@ -111,6 +111,259 @@ resource "aws_ecs_cluster" "ecs_cluster" {
 }
 
 
+# --- Create a Cloud Map Namespace ---
+
+resource "aws_service_discovery_private_dns_namespace" "main" {
+  name        = "service.local"
+  vpc         = var.vpc2_id
+  description = "Service discovery for ECS services"
+}
+
+
+# --- Add Service Discovery to ECS Services ---
+
+resource "aws_service_discovery_service" "rabbitmq" {
+  name = "rabbitmq"
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.main.id
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+    routing_policy = "MULTIVALUE"
+  }
+
+  health_check_custom_config {
+    failure_threshold = 1
+  }
+}
+
+resource "aws_service_discovery_service" "memcached" {
+  name = "memcached"
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.main.id
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+    routing_policy = "MULTIVALUE"
+  }
+
+  health_check_custom_config {
+    failure_threshold = 1
+  }
+}
+
+resource "aws_service_discovery_service" "mysql" {
+  name = "mysql"
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.main.id
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+    routing_policy = "MULTIVALUE"
+  }
+
+  health_check_custom_config {
+    failure_threshold = 1
+  }
+}
+
+
+
+
+
+
+
+# --- Define ECS Task Definitions (RabbitMQ, Memcached, MySQL) ---
+resource "aws_ecs_task_definition" "rabbitmq" {
+  family                   = "rabbitmq"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name  = "rabbitmq"
+      image = "rabbitmq:3-management"
+      portMappings = [
+        { containerPort = 5672, hostPort = 5672, protocol = "tcp" },
+        { containerPort = 15672, hostPort = 15672, protocol = "tcp" }
+      ]
+    }
+  ])
+}
+
+
+resource "aws_ecs_service" "rabbitmq_service" {
+  name            = "rabbitmq"
+  cluster         = aws_ecs_cluster.ecs_cluster.id
+  task_definition = aws_ecs_task_definition.rabbitmq.arn
+  launch_type     = "FARGATE"
+  desired_count   = 1
+
+  network_configuration {
+    subnets          = var.private_subnet_ids
+    security_groups  = [var.app_security_group_id]
+    assign_public_ip = false
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.rabbitmq.arn
+  }
+
+  tags = merge(
+      local.tags,
+      {
+        Name = "rabbitmq"
+      }
+  )
+}
+
+
+
+resource "aws_ecs_task_definition" "memcached" {
+  family                   = "memcached"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name  = "memcached"
+      image = "memcached:latest"
+      portMappings = [
+        { containerPort = 11211, hostPort = 11211, protocol = "tcp" }
+      ]
+    }
+  ])
+}
+
+
+resource "aws_ecs_service" "memcached_service" {
+  name            = "memcached"
+  cluster         = aws_ecs_cluster.ecs_cluster.id
+  task_definition = aws_ecs_task_definition.memcached.arn
+  launch_type     = "FARGATE"
+  desired_count   = 1
+
+  network_configuration {
+    subnets          = var.private_subnet_ids
+    security_groups  = [var.app_security_group_id]
+    assign_public_ip = false
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.memcached.arn
+  }
+
+  tags = merge(
+      local.tags,
+      {
+        Name = "memcached"
+      }
+  )
+}
+
+
+resource "aws_efs_file_system" "mysql_efs" {
+  creation_token = "mysql-efs"
+
+  tags = merge(
+      local.tags,
+      {
+        Name = "mysql-efs"
+      }
+  )
+}
+
+resource "aws_efs_mount_target" "mysql_efs_mt" {
+  file_system_id  = aws_efs_file_system.mysql_efs.id
+  subnet_id       = var.private_subnet_ids[0]   
+  security_groups = [var.efs_sg_id]
+}
+
+
+
+resource "aws_ecs_task_definition" "mysql" {
+  family                   = "mysql"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "512"
+  memory                   = "1024"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+
+  volume {
+    name = "mysql-data"
+
+    efs_volume_configuration {
+      file_system_id          = aws_efs_file_system.mysql_efs.id
+      root_directory          = "/"
+      transit_encryption      = "ENABLED"
+      authorization_config {
+        access_point_id = aws_efs_access_point.mysql_ap.id
+        iam             = "ENABLED"
+      }
+    }
+  }
+
+  container_definitions = jsonencode([
+    {
+      name  = "mysql"
+      image = "mysql:5.7"
+      portMappings = [
+        { containerPort = 3306, hostPort = 3306, protocol = "tcp" }
+      ]
+      environment = [
+        { name = "MYSQL_ROOT_PASSWORD", value = "vprodbpass" },
+        { name = "MYSQL_DATABASE", value = "accounts" }
+      ]
+
+      mountPoints = [
+        {
+          sourceVolume  = "mysql-data"
+          containerPath = "/var/lib/mysql"
+          readOnly      = false
+        }
+      ]
+    }
+  ])
+}
+
+
+resource "aws_ecs_service" "mysql_service" {
+  name            = "mysql"
+  cluster         = aws_ecs_cluster.ecs_cluster.id
+  task_definition = aws_ecs_task_definition.mysql.arn
+  launch_type     = "FARGATE"
+  desired_count   = 1
+
+  network_configuration {
+    subnets          = var.private_subnet_ids
+    security_groups  = [var.app_security_group_id]
+    assign_public_ip = false
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.mysql.arn
+  }
+
+  tags = merge(
+      local.tags,
+      {
+        Name = "mysql"
+      }
+  )
+}
+
+
+
+
 # --- ECS Task Definition ---
 resource "aws_ecs_task_definition" "app_task" {
   family                   = var.backend_task_family
@@ -129,7 +382,24 @@ resource "aws_ecs_task_definition" "app_task" {
         hostPort      = var.host_port,
         protocol      = "tcp"
       }],
-        logConfiguration = {
+
+      environment = [
+        { name = "JDBC_URL", value = "jdbc:mysql://mysql.service.local:3306/accounts" },
+        { name = "JDBC_USERNAME", value = "root" },
+        { name = "JDBC_PASSWORD", value = "vprodbpass" },
+
+        { name = "MEMCACHED_ACTIVE_HOST", value = "memcached.service.local" },
+        { name = "MEMCACHED_ACTIVE_PORT", value = "11211" },
+        { name = "MEMCACHED_STANDBY_HOST", value = "rabbitmq.service.local" },
+        { name = "MEMCACHED_STANDBY_PORT", value = "11211" },
+
+        { name = "RABBITMQ_ADDRESS", value = "rabbitmq.service.local" },
+        { name = "RABBITMQ_PORT", value = "15672" },
+        { name = "RABBITMQ_USERNAME", value = "guest" },
+        { name = "RABBITMQ_PASSWORD", value = "guest" }
+      ],
+      
+      logConfiguration = {
           logDriver = "awslogs",
           options = {
             awslogs-group         = "/ecs/${var.backend_service_name}"

@@ -88,5 +88,6 @@ module "ecs-cluster" {
   aws_ecs_service               = var.aws_ecs_service
   project                       = var.project
   aws_region                    = var.region
-  vpc2_id                        = module.network.vpc2_id
+  vpc2_id                       = module.network.vpc2_id
+  efs_sg_id                     = module.security.efs_security_group_id
 }

@@ -68,6 +68,11 @@ variable "app_security_group_id" {
   description = "Security group ID to be associated with ECS services"
 }
 
+variable "efs_sg_id" {
+  type        = string
+  description = "Security group ID to be associated with aws_efs_mount_target"
+}
+
 variable "aws_ecs_service" {
   type        = string
   description = "Name of the ECS service"
