@@ -33,6 +33,75 @@ Provide a visual representation of:
 - Security (IAM, SGs, Encryption)
 
 
+### 🌐 Full Flow Overview:
+
+
+```
+User (Internet)
+    ↓
+Public NLB (port 80, in Public Subnet, Public SG)
+    ↓
+Private NGINX (reverse proxy on port 80 or 443, in Private Subnet, Private NGINX SG)
+    ↓
+Private NLB (target group listens on port 8080, in Private Subnet, Private NLB SG)
+    ↓
+ECS Task (App listens on port 8080, in Private Subnet, ECS Task SG)
+    ↓
+Private DB (port 3306 or other, in Private Subnet, DB SG)
+
+```
+
+### 🔐 Security Group Rules Overview
+
+#### 📌 Public NLB Security Group (Public SG)
+
+| **Direction** | **Type** | **Port** | **Source/Destination** | **Purpose**                                      |
+|---------------|----------|----------|-------------------------|--------------------------------------------------|
+| Inbound       | HTTP     | 80       | 0.0.0.0/0               | Allow traffic from the internet                  |
+| Outbound      | HTTP     | 80       | NGINX SG                | Forward request to NGINX reverse proxy           |
+
+---
+
+#### 📌 Private NGINX Security Group
+
+| **Direction** | **Type** | **Port** | **Source/Destination** | **Purpose**                                      |
+|---------------|----------|----------|-------------------------|--------------------------------------------------|
+| Inbound       | HTTP     | 80       | Public NLB SG           | Accept traffic from Public NLB                   |
+| Inbound       | HTTPS    | 443      | Public NLB SG           | (Optional) Accept HTTPS from Public NLB          |
+| Outbound      | HTTP     | 8080     | Private NLB SG          | Forward to backend app via Private NLB           |
+
+---
+
+#### 📌 Private NLB Security Group
+
+| **Direction** | **Type** | **Port** | **Source/Destination** | **Purpose**                                      |
+|---------------|----------|----------|-------------------------|--------------------------------------------------|
+| Inbound       | HTTP     | 8080     | NGINX SG                | Accept traffic from NGINX                        |
+| Outbound      | HTTP     | 8080     | ECS Task SG             | Forward to ECS application container             |
+
+---
+
+#### 📌 ECS Task Security Group
+
+| **Direction** | **Type** | **Port** | **Source/Destination** | **Purpose**                                      |
+|---------------|----------|----------|-------------------------|--------------------------------------------------|
+| Inbound       | HTTP     | 8080     | Private NLB SG          | Accept traffic from Private NLB                  |
+| Outbound      | All      | All      | 0.0.0.0/0               | Allow internet and DB access                     |
+
+---
+
+#### 📌 Private DB Security Group
+
+| **Direction** | **Type**    | **Port** | **Source/Destination** | **Purpose**                                      |
+|---------------|-------------|----------|-------------------------|--------------------------------------------------|
+| Inbound       | MySQL/Aurora| 3306     | ECS Task SG             | Accept DB queries from ECS task                  |
+| Outbound      | All         | All      | 0.0.0.0/0               | Allow system updates, DNS, etc.                  |
+
+
+
+
+
+
 ## III. High-Level Goals for 99.95% SLA
 
 ### Availability & Resilience Strategy

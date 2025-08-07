@@ -19,3 +19,30 @@ public_bastion_subnets = ["10.10.0.0/24"]
 public_bastion_subnet_name = "aj3-aws-infra-vpc1-pub1-dev"
 bastion_internet_gateway_name = "aj3-aws-infra-vpc1-igw-dev"
 bastion_public_rt_name = "aj3-aws-infra-vpc1-rtb-dev"
+
+
+# SG module
+public_nlb_sg_name   = "aj3-aws-infra-vpc2-public-nlb-sg-dev"
+nginx_sg_name   = "aj3-aws-infra-vpc2-nginx-sg-dev"
+app_sg_name  = "aj3-aws-infra-vpc2-app-sg-dev"
+bastion_sg_name  = "aj3-aws-infra-vpc1-bastion-sg-dev"
+database_sg_name = "aj3-aws-infra-vpc2-db-sg-dev"
+
+# Bastion module
+ami_id        = "ami-0c1907b6d738188e5"
+instance_type = "t3.small"
+key_name      = "aj3-aws-infra-vpc1-key-dev"
+instance_name = "aj3-aws-infra-vpc1-bastion-vm-dev"
+nginx_instance_name = "aj3-aws-infra-vpc2-nginx-vm-dev"
+volume_size   = 10
+
+# ECS module
+ecr_repo_name                 = "aj3-aws-infra-ecr-repo-dev"
+aws_ecs_cluster_name          = "aj3-aws-infra-ecs-cluster-dev"
+aws_ecs_task_definition_name  = "aj3-aws-infra-ecs-task-def-dev"
+backend_task_family           = "aj3-aws-infra-ecs-backend-task-dev"
+backend_service_name          = "aj3-aws-infra-ecs-app-tomcat-dev"
+backend_image_tag             = "0.0.0"
+container_port                = 8080
+host_port                     = 8080
+aws_ecs_service               = "aj3-aws-infra-ecs-service-dev"

@@ -1,3 +1,8 @@
+variable "project" {
+  description = "The project name to use for unique resource naming"
+  type        = string
+}
+
 variable "ami_id" {
   description = "AMI ID for Ubuntu Server"
   type        = string
@@ -18,13 +23,18 @@ variable "subnet_id" {
   type        = string
 }
 
-variable "vpc_security_group_ids" {
+variable "bastion_security_group_id" {
   description = "List of security group IDs"
   type        = list(string)
 }
 
+
+variable "nginx_security_group_id" {
+  description = "Security Group ID for nginx server"
+  type        = list(string)
+}
+
 variable "instance_name" {
-  default     = "aws-infra-01-bastion-vm"
   description = "Name tag for the bastion instance"
   type        = string
 }
@@ -33,4 +43,14 @@ variable "volume_size" {
   default     = 10
   description = "Root volume size in GiB"
   type        = number
+}
+
+variable "nginx_instance_name" {
+  description = "Name tag for the nginx instance"
+  type        = string
+}
+
+variable "nginx_subnet_id" {
+  description = "Public subnet ID for nginx"
+  type        = string
 }

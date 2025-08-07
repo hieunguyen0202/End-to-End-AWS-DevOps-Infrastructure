@@ -1,8 +1,20 @@
-# modules/bastion/main.tf
+locals {
+  tags = {
+    project     = var.project
+  }
+}
+
+
+resource "local_sensitive_file" "private_key" {
+  filename        = "${path.module}/keypair/ansible.pem"
+  content         = file("${path.module}/keypair/aj3-aws-infra-bastion-key")
+  file_permission = "0400"
+}
+
 
 resource "aws_key_pair" "bastion_key" {
   key_name   = var.key_name
-  public_key = file("${path.module}/keypair/aws-infra-01-key.pub")
+  public_key = file("${path.module}/keypair/aj3-aws-infra-bastion-key.pub")
 }
 
 
@@ -10,21 +22,122 @@ resource "aws_instance" "bastion" {
   ami                         = var.ami_id
   instance_type               = var.instance_type
   subnet_id                   = var.subnet_id
-  vpc_security_group_ids      = var.vpc_security_group_ids
+  vpc_security_group_ids      = var.bastion_security_group_id
   key_name                    = aws_key_pair.bastion_key.key_name
   associate_public_ip_address = true
 
-  user_data = <<-EOF
-              #!/bin/bash
-              sudo apt update && sudo apt install mysql-client -y
-              EOF
+  # Step 1: Upload required files to Bastion
+  provisioner "file" {
+    source      = "${path.module}/keypair/ansible.pem"
+    destination = "/home/ubuntu/ansible.pem"
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("${path.module}/keypair/aj3-aws-infra-bastion-key")
+      host        = self.public_ip
+    }
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/keypair/playbook.yaml"
+    destination = "/home/ubuntu/playbook.yaml"
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("${path.module}/keypair/aj3-aws-infra-bastion-key")
+      host        = self.public_ip
+    }
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/keypair/index.html"
+    destination = "/home/ubuntu/index.html"
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("${path.module}/keypair/aj3-aws-infra-bastion-key")
+      host        = self.public_ip
+    }
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/keypair/nginx.conf.j2"
+    destination = "/home/ubuntu/nginx.conf.j2"
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("${path.module}/keypair/aj3-aws-infra-bastion-key")
+      host        = self.public_ip
+    }
+  }
+
+  # Step 2: Install Ansible
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt update -y",
+      "sudo apt install -y software-properties-common",
+      "sudo apt-add-repository --yes --update ppa:ansible/ansible",
+      "sudo apt install -y ansible"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("${path.module}/keypair/aj3-aws-infra-bastion-key")
+      host        = self.public_ip
+    }
+  }
+
+  # Step 3: Run Ansible Playbook targeting nginx instance
+  provisioner "remote-exec" {
+    inline = [
+      "chmod 400 /home/ubuntu/ansible.pem",
+      "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u ubuntu --private-key /home/ubuntu/ansible.pem -T 300 -i '${aws_instance.nginx.private_ip},' /home/ubuntu/playbook.yaml"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("${path.module}/keypair/aj3-aws-infra-bastion-key")
+      host        = self.public_ip
+    }
+  }
+
+  
+  root_block_device {
+    volume_size = var.volume_size
+    volume_type = "gp2"
+  }
+
+  tags = merge(
+      local.tags,
+      {
+        Name = var.instance_name
+      }
+  )
+}
+
+
+resource "aws_instance" "nginx" {
+  ami                         = var.ami_id
+  instance_type               = var.instance_type
+  subnet_id                   = var.nginx_subnet_id
+  vpc_security_group_ids      = var.nginx_security_group_id
+  key_name                    = aws_key_pair.bastion_key.key_name
+  associate_public_ip_address = false  # Private instance, access via bastion
 
   root_block_device {
     volume_size = var.volume_size
     volume_type = "gp2"
   }
 
-  tags = {
-    Name = var.instance_name
-  }
+  tags = merge(
+    local.tags,
+    {
+      Name = var.nginx_instance_name
+    }
+  )
 }
