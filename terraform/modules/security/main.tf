@@ -98,48 +98,48 @@ resource "aws_security_group" "nginx_sg" {
 
 # Private NLB Security Group
 
-resource "aws_security_group" "private_nlb_sg" {
-  name        = var.private_nlb_sg_name
-  description = "Allow app ports from NGINX SG"
-  vpc_id      = var.vpc2_id
+# resource "aws_security_group" "private_nlb_sg" {
+#   name        = var.private_nlb_sg_name
+#   description = "Allow app ports from NGINX SG"
+#   vpc_id      = var.vpc2_id
 
 
-  ingress {
-    from_port       = 8080
-    to_port         = 8080
-    protocol        = "tcp"
-    security_groups = [aws_security_group.nginx_sg.id]
-  }
+#   ingress {
+#     from_port       = 8080
+#     to_port         = 8080
+#     protocol        = "tcp"
+#     security_groups = [aws_security_group.nginx_sg.id]
+#   }
 
-  # ingress {
-  #   from_port   = 8080
-  #   to_port     = 8080
-  #   protocol    = "tcp"
-  #   cidr_blocks = ["10.0.10.0/24", "10.0.20.0/24"]
-  # }
+#   # ingress {
+#   #   from_port   = 8080
+#   #   to_port     = 8080
+#   #   protocol    = "tcp"
+#   #   cidr_blocks = ["10.0.10.0/24", "10.0.20.0/24"]
+#   # }
 
-  # ingress {
-  #   from_port   = 80
-  #   to_port     = 80
-  #   protocol    = "tcp"
-  #   cidr_blocks = ["10.0.10.0/24", "10.0.20.0/24"]
-  # }
+#   # ingress {
+#   #   from_port   = 80
+#   #   to_port     = 80
+#   #   protocol    = "tcp"
+#   #   cidr_blocks = ["10.0.10.0/24", "10.0.20.0/24"]
+#   # }
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
 
-  tags = merge(
-      local.tags,
-      {
-        Name = var.private_nlb_sg_name
-      }
-  )
+#   tags = merge(
+#       local.tags,
+#       {
+#         Name = var.private_nlb_sg_name
+#       }
+#   )
 
-}
+# }
 
 
 # ECS Task Security Group
@@ -154,7 +154,7 @@ resource "aws_security_group" "app_sg" {
     from_port       = 8080
     to_port         = 8080
     protocol        = "tcp"
-    security_groups = [aws_security_group.private_nlb_sg.id]
+    security_groups = [aws_security_group.nginx_sg.id]
   }
 
   # ingress {
