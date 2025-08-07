@@ -193,6 +193,15 @@ resource "aws_ecs_task_definition" "rabbitmq" {
         { containerPort = 5672, hostPort = 5672, protocol = "tcp" },
         { containerPort = 15672, hostPort = 15672, protocol = "tcp" }
       ]
+
+      logConfiguration = {
+          logDriver = "awslogs",
+          options = {
+            awslogs-group         = "/ecs/rabbitmq"
+            awslogs-region        = var.aws_region
+            awslogs-stream-prefix = "ecs"
+          }
+        }
     }
   ])
 }
@@ -240,6 +249,15 @@ resource "aws_ecs_task_definition" "memcached" {
       portMappings = [
         { containerPort = 11211, hostPort = 11211, protocol = "tcp" }
       ]
+
+      logConfiguration = {
+          logDriver = "awslogs",
+          options = {
+            awslogs-group         = "/ecs/memcached"
+            awslogs-region        = var.aws_region
+            awslogs-stream-prefix = "ecs"
+          }
+        }
     }
   ])
 }
@@ -352,6 +370,15 @@ resource "aws_ecs_task_definition" "mysql" {
         { name = "MYSQL_ROOT_PASSWORD", value = "vprodbpass" },
         { name = "MYSQL_DATABASE", value = "accounts" }
       ]
+
+      logConfiguration = {
+          logDriver = "awslogs",
+          options = {
+            awslogs-group         = "/ecs/mysql"
+            awslogs-region        = var.aws_region
+            awslogs-stream-prefix = "ecs"
+          }
+      }
 
       mountPoints = [
         {
