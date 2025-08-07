@@ -289,6 +289,34 @@ resource "aws_efs_mount_target" "mysql_efs_mt" {
 }
 
 
+resource "aws_efs_access_point" "mysql_ap" {
+  file_system_id = aws_efs_file_system.mysql_efs.id
+
+  posix_user {
+    gid = 1000
+    uid = 1000
+  }
+
+  root_directory {
+    path = "/mysql"
+
+    creation_info {
+      owner_gid   = 1000
+      owner_uid   = 1000
+      permissions = "0755"
+    }
+  }
+
+  tags = merge(
+      local.tags,
+      {
+        Name = "mysql-access-point"
+      }
+  )
+
+}
+
+
 
 resource "aws_ecs_task_definition" "mysql" {
   family                   = "mysql"

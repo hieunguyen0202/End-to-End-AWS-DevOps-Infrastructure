@@ -271,7 +271,7 @@ resource "aws_security_group" "database_sg" {
 resource "aws_security_group" "efs_sg" {
   name        = "efs-sg"
   description = "Allow NFS access from ECS tasks"
-  vpc_id      = var.vpc_id
+  vpc_id      = var.vpc2_id
 
   ingress {
     from_port   = 2049
