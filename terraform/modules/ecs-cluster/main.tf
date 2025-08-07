@@ -38,7 +38,7 @@ resource "aws_lb_target_group" "app_tg" {
 # Listener
 resource "aws_lb_listener" "app_listener" {
   load_balancer_arn = aws_lb.app_nlb.arn
-  port              = var.container_port
+  port              = "80"
   protocol          = "TCP"
 
   default_action {
