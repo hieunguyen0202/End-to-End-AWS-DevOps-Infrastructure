@@ -96,9 +96,19 @@ variable "bastion_public_rt_name" {
 
 # Security Group Module
 
+variable "public_nlb_sg_name" {
+  type        = string
+  description = "Name of Public NLB Security Group"
+}
+
 variable "nginx_sg_name" {
   type        = string
   description = "Name of the nginx security group"
+}
+
+variable "private_nlb_sg_name" {
+  type        = string
+  description = "Name of Private NLB Security Group"
 }
 
 variable "app_sg_name" {

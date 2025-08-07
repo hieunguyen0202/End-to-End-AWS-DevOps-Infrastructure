@@ -5,8 +5,10 @@ locals {
 }
 
 
-resource "aws_security_group" "nginx_sg" {
-  name        = var.nginx_sg_name
+# Public NLB Security Group
+
+resource "aws_security_group" "public_nlb_sg" {
+  name        = var.public_nlb_sg_name
   description = "Allow HTTP/HTTPS traffic from internet"
   vpc_id      = var.vpc2_id
 
@@ -15,6 +17,44 @@ resource "aws_security_group" "nginx_sg" {
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(
+      local.tags,
+      {
+        Name = var.public_nlb_sg_name
+      }
+  )
+}
+
+
+# Private NGINX Security Group
+
+resource "aws_security_group" "nginx_sg" {
+  name        = var.nginx_sg_name
+  description = "Allow HTTP/HTTPS traffic from Public NLB Security Group"
+  vpc_id      = var.vpc2_id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    security_groups = [aws_security_group.public_nlb_sg.id]
   }
 
   ingress {
@@ -56,17 +96,13 @@ resource "aws_security_group" "nginx_sg" {
   )
 }
 
-resource "aws_security_group" "app_sg" {
-  name        = var.app_sg_name
+# Private NLB Security Group
+
+resource "aws_security_group" "private_nlb_sg" {
+  name        = var.private_nlb_sg_name
   description = "Allow app ports from NGINX SG"
   vpc_id      = var.vpc2_id
 
-  ingress {
-    from_port       = 3000
-    to_port         = 3000
-    protocol        = "tcp"
-    security_groups = [aws_security_group.nginx_sg.id]
-  }
 
   ingress {
     from_port       = 8080
@@ -75,19 +111,65 @@ resource "aws_security_group" "app_sg" {
     security_groups = [aws_security_group.nginx_sg.id]
   }
 
-  ingress {
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.10.0/24", "10.0.20.0/24"]
+  # ingress {
+  #   from_port   = 8080
+  #   to_port     = 8080
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["10.0.10.0/24", "10.0.20.0/24"]
+  # }
+
+  # ingress {
+  #   from_port   = 80
+  #   to_port     = 80
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["10.0.10.0/24", "10.0.20.0/24"]
+  # }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
+  tags = merge(
+      local.tags,
+      {
+        Name = var.private_nlb_sg_name
+      }
+  )
+
+}
+
+
+# ECS Task Security Group
+
+resource "aws_security_group" "app_sg" {
+  name        = var.app_sg_name
+  description = "Allow app ports from NGINX SG"
+  vpc_id      = var.vpc2_id
+
+
   ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.10.0/24", "10.0.20.0/24"]
+    from_port       = 8080
+    to_port         = 8080
+    protocol        = "tcp"
+    security_groups = [aws_security_group.private_nlb_sg.id]
   }
+
+  # ingress {
+  #   from_port   = 8080
+  #   to_port     = 8080
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["10.0.10.0/24", "10.0.20.0/24"]
+  # }
+
+  # ingress {
+  #   from_port   = 80
+  #   to_port     = 80
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["10.0.10.0/24", "10.0.20.0/24"]
+  # }
 
   egress {
     from_port   = 0
@@ -104,6 +186,8 @@ resource "aws_security_group" "app_sg" {
   )
 
 }
+
+# Bastion Host Security Group
 
 resource "aws_security_group" "bastion_sg" {
   name        = var.bastion_sg_name
@@ -132,6 +216,9 @@ resource "aws_security_group" "bastion_sg" {
   )
 
 }
+
+
+# Private DB Security Group
 
 resource "aws_security_group" "database_sg" {
   name        = var.database_sg_name
