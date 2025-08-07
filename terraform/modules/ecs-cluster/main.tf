@@ -94,6 +94,28 @@ resource "aws_cloudwatch_log_group" "ecs_log_group" {
   tags = local.tags
 }
 
+resource "aws_cloudwatch_log_group" "ecs_log_group_rabbitmq" {
+  name              = "/ecs/rabbitmq"
+  retention_in_days = 7
+
+  tags = local.tags
+}
+
+resource "aws_cloudwatch_log_group" "ecs_log_group_memcached" {
+  name              = "/ecs/memcached"
+  retention_in_days = 7
+
+  tags = local.tags
+}
+
+resource "aws_cloudwatch_log_group" "ecs_log_group_mysql" {
+  name              = "/ecs/mysql"
+  retention_in_days = 7
+
+  tags = local.tags
+}
+
+
 
 
 
