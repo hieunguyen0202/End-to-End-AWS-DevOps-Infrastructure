@@ -265,7 +265,7 @@ locals {
       secrets = [
         for key in keys(local.moai_secret_map) : {
           name      = key
-          valueFrom = "${aws_secretsmanager_secret.moai_secret.arn}:${key}"
+          valueFrom = aws_secretsmanager_secret.moai_secret.arn
         }
       ]
       logConfiguration = {
@@ -516,7 +516,7 @@ locals {
       secrets = [
         for key in keys(local.valkey_secret_map) : {
           name      = key
-          valueFrom = "${aws_secretsmanager_secret.valkey_secret.arn}:${key}"
+          valueFrom = aws_secretsmanager_secret.valkey_secret.arn
         }
       ]
       command = [
