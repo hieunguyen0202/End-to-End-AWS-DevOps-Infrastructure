@@ -240,6 +240,7 @@ locals {
     USER_PASSWORD_HASH                    = "$2a$14$X4z6XeRVWf9lfT.3Ssfh/u8W6GwWgPQU7u./COhHbiQVz2DIarv.O"
     USER_SYNC_WEBHOOK_SECRET              = "2ef4a3e905b3c33abf247d792324d9051df4996a1d0d917d8942212e9957ef38"
     MOAI_API_KEY                          = "31b68da6a026747862480491e23b7b5c45234441aa451e452a246e949ff32daf"
+    JWT_SECRET                            = "FvDJZP3b4wVaQj9YWHn8WuWVflHlzWrQUaWWEtiCOJw="
   }
 
   moai_container_def = [
@@ -353,6 +354,7 @@ locals {
     WEBHOOK_SECRET                 = "your-webhook-secret"
     SYNC_MOAI                      = "true"
     DB_TYPE                        = "mysql"
+    JWT_SECRET                     = "FvDJZP3b4wVaQj9YWHn8WuWVflHlzWrQUaWWEtiCOJw="
   }
 
   aegis_container_def = [
