@@ -386,7 +386,7 @@ locals {
       secrets = [
         for key in keys(local.aegis_secret_map) : {
           name      = key
-          valueFrom = aws_secretsmanager_secret.aegis_secret.arn
+          valueFrom = "${aws_secretsmanager_secret.aegis_secret.arn}:${key}"
         }
       ]
       logConfiguration = {
