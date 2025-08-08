@@ -11,6 +11,10 @@ locals {
 resource "aws_ecr_repository" "moai_repo" {
   name = var.ecr_moai_repo_name
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = merge(
       local.tags,
       {
@@ -22,6 +26,10 @@ resource "aws_ecr_repository" "moai_repo" {
 resource "aws_ecr_repository" "aegis_repo" {
   name = var.ecr_aegis_repo_name
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = merge(
       local.tags,
       {
@@ -32,6 +40,10 @@ resource "aws_ecr_repository" "aegis_repo" {
 
 resource "aws_ecr_repository" "valkey_repo" {
   name = var.ecr_valkey_repo_name
+
+  lifecycle {
+    prevent_destroy = true
+  }
 
   tags = merge(
       local.tags,
