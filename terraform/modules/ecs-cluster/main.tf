@@ -77,27 +77,27 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_attach" {
 }
 
 # Custom inline policy to allow secrets access
-resource "aws_iam_role_policy" "ecs_secrets_access" {
-  name = "ecsSecretsAccessPolicy"
-  role = aws_iam_role.ecs_task_execution_role.id
+# resource "aws_iam_role_policy" "ecs_secrets_access" {
+#   name = "ecsSecretsAccessPolicy"
+#   role = aws_iam_role.ecs_task_execution_role.id
 
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect   = "Allow",
-        Action   = [
-          "secretsmanager:GetSecretValue"
-        ],
-        Resource = [
-          aws_secretsmanager_secret.aegis_secret.arn,
-          aws_secretsmanager_secret.moai_secret.arn,
-          aws_secretsmanager_secret.valkey_secret.arn
-        ]
-      }
-    ]
-  })
-}
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect   = "Allow",
+#         Action   = [
+#           "secretsmanager:GetSecretValue"
+#         ],
+#         Resource = [
+#           aws_secretsmanager_secret.aegis_secret.arn,
+#           aws_secretsmanager_secret.moai_secret.arn,
+#           aws_secretsmanager_secret.valkey_secret.arn
+#         ]
+#       }
+#     ]
+#   })
+# }
 
 
 # Create a CloudWatch Log Group
@@ -199,73 +199,64 @@ resource "aws_service_discovery_service" "valkey" {
 
 # --- MOAI Service ---
 
-resource "aws_secretsmanager_secret" "moai_secret" {
-  name        = "moai/env"
-  description = "Environment variables for Moai service"
-}
-
-
-resource "aws_secretsmanager_secret_version" "moai_secret_version" {
-  secret_id     = aws_secretsmanager_secret.moai_secret.id
-  secret_string = jsonencode({
-    RUST_LOG                              = "debug",
-    AUTH_PROVIDER                         = "microsoft",
-    AUTH_REDIRECT_URL                     = "http://moai-auth-service:10001/auth/callback",
-    AUTH_URL                              = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
-    TOKEN_URL                             = "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-    USERINFO_URL                          = "https://graph.microsoft.com/oidc/userinfo",
-    POSTGRES_URL                          = "mysql://dbuser:StrongPassword@192.168.1.56:3306/moai_auth",
-    AUTH_SCOPE                            = "openid email profile User.Read",
-    JWT_AUDIENCE                          = "aegis-api",
-    JWT_ISSUER                            = "moai-auth-service",
-    REDIS_SESSION_ENABLED                 = "true",
-    REDIS_SESSION_PREFIX                  = "moai_auth_session:",
-    REDIS_SESSION_TTL                     = "1",
-    AEGIS_SERVICE_URL                     = "http://aegis-service:10005",
-    AEGIS_SERVICE_ENABLED                 = "true",
-    TEST_USER_ID                          = "00000000-0000-0000-0000-000000000001",
-    DEVELOPMENT_MODE                      = "false",
-    DB_MAX_CONNECTIONS                    = "5",
-    ADMIN_EMAILS                          = "admin@globalinvest.com,admin@retailbank.com",
-    USER_EMAILS                           = "analyst@globalinvest.com,director@globalinvest.com,teller@retailbank.com",
-    USER_SYNC_WEBHOOK_ENABLED             = "true",
-    USER_SYNC_WEBHOOK_VALIDATE_SIGNATURES = "true",
-    HERMES_ENABLED                        = "false",
-    HERMES_TOKEN                          = "hermes_token",
-    CORS_ALLOWED_ORIGINS                  = "https://192.168.1.56",
-    CORS_ALLOW_CREDENTIALS                = "true",
-    DATABASE_TYPE                         = "mysql",
-    OPENTELEMETRY_ENABLED                 = "false",
-    ENV_FILE                              = "/etc/moai/config.env",
-    DATABASE_URL                          = "mysql://${var.db_username}:${var.db_password}@${var.rds_endpoint}/moai_auth",
-    REDIS_URL                             = "redis://default:valkey-passw0rd@valkey-service:6379",
-    AUTH_CLIENT_ID                        = "local-dev-client",
-    AUTH_CLIENT_SECRET                    = "a879a79ccb46396b1a0380f54b1f3026814fd491399db3",
-    SESSION_SECRET                        = "eICKpNek4XGBEQdgeLZQ24+gvf51C1BLq7OPCcJjH8UKYXq3sicuPRdSE3JM/TFJhKDuqSkkaiSc/ipdREzjHw==",
-    AEGIS_API_KEY                         = "aca55d468c82d05c0497bdad052861fe22717f7e42958ad3b0cc1a55b973a1c7",
-    ADMIN_PASSWORD_HASH                   = "$2b$10$rRN9aBigVzGzVl9VlmPnSOGYjYRQQIHHLjvQiG7YOoStTQKV1y1Vy",
-    USER_PASSWORD_HASH                    = "$2a$14$X4z6XeRVWf9lfT.3Ssfh/u8W6GwWgPQU7u./COhHbiQVz2DIarv.O",
-    USER_SYNC_WEBHOOK_SECRET              = "2ef4a3e905b3c33abf247d792324d9051df4996a1d0d917d8942212e9957ef38",
-    MOAI_API_KEY                          = "31b68da6a026747862480491e23b7b5c45234441aa451e452a246e949ff32daf"
-  })
-}
-
 locals {
-  moai_secret_map = jsondecode(aws_secretsmanager_secret_version.moai_secret_version.secret_string)
+  moai_secret_map = {
+    RUST_LOG                              = "debug"
+    AUTH_PROVIDER                         = "microsoft"
+    AUTH_REDIRECT_URL                     = "http://moai-auth-service:10001/auth/callback"
+    AUTH_URL                              = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+    TOKEN_URL                             = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+    USERINFO_URL                          = "https://graph.microsoft.com/oidc/userinfo"
+    POSTGRES_URL                          = "mysql://dbuser:StrongPassword@192.168.1.56:3306/moai_auth"
+    AUTH_SCOPE                            = "openid email profile User.Read"
+    JWT_AUDIENCE                          = "aegis-api"
+    JWT_ISSUER                            = "moai-auth-service"
+    REDIS_SESSION_ENABLED                 = "true"
+    REDIS_SESSION_PREFIX                  = "moai_auth_session:"
+    REDIS_SESSION_TTL                     = "1"
+    AEGIS_SERVICE_URL                     = "http://aegis-service:10005"
+    AEGIS_SERVICE_ENABLED                 = "true"
+    TEST_USER_ID                          = "00000000-0000-0000-0000-000000000001"
+    DEVELOPMENT_MODE                      = "false"
+    DB_MAX_CONNECTIONS                    = "5"
+    ADMIN_EMAILS                          = "admin@globalinvest.com,admin@retailbank.com"
+    USER_EMAILS                           = "analyst@globalinvest.com,director@globalinvest.com,teller@retailbank.com"
+    USER_SYNC_WEBHOOK_ENABLED             = "true"
+    USER_SYNC_WEBHOOK_VALIDATE_SIGNATURES = "true"
+    HERMES_ENABLED                        = "false"
+    HERMES_TOKEN                          = "hermes_token"
+    CORS_ALLOWED_ORIGINS                  = "https://192.168.1.56"
+    CORS_ALLOW_CREDENTIALS                = "true"
+    DATABASE_TYPE                         = "mysql"
+    OPENTELEMETRY_ENABLED                 = "false"
+    ENV_FILE                              = "/etc/moai/config.env"
+    DATABASE_URL                          = "mysql://${var.db_username}:${var.db_password}@${var.rds_endpoint}/moai_auth"
+    REDIS_URL                             = "redis://default:valkey-passw0rd@valkey-service:6379"
+    AUTH_CLIENT_ID                        = "local-dev-client"
+    AUTH_CLIENT_SECRET                    = "a879a79ccb46396b1a0380f54b1f3026814fd491399db3"
+    SESSION_SECRET                        = "eICKpNek4XGBEQdgeLZQ24+gvf51C1BLq7OPCcJjH8UKYXq3sicuPRdSE3JM/TFJhKDuqSkkaiSc/ipdREzjHw=="
+    AEGIS_API_KEY                         = "aca55d468c82d05c0497bdad052861fe22717f7e42958ad3b0cc1a55b973a1c7"
+    ADMIN_PASSWORD_HASH                   = "$2b$10$rRN9aBigVzGzVl9VlmPnSOGYjYRQQIHHLjvQiG7YOoStTQKV1y1Vy"
+    USER_PASSWORD_HASH                    = "$2a$14$X4z6XeRVWf9lfT.3Ssfh/u8W6GwWgPQU7u./COhHbiQVz2DIarv.O"
+    USER_SYNC_WEBHOOK_SECRET              = "2ef4a3e905b3c33abf247d792324d9051df4996a1d0d917d8942212e9957ef38"
+    MOAI_API_KEY                          = "31b68da6a026747862480491e23b7b5c45234441aa451e452a246e949ff32daf"
+  }
 
   moai_container_def = [
     {
       name  = "moai_auth_service"
       image = "${aws_ecr_repository.moai_repo.repository_url}:${var.moai_image_tag}"
-      portMappings = [{
-        containerPort = 8081
-        hostPort      = 8081
-        protocol      = "tcp"
-      }]
-      secrets = [
-        for key in keys(local.moai_secret_map) : {
-          name      = key
-          valueFrom = aws_secretsmanager_secret.moai_secret.arn
+      portMappings = [
+        {
+          containerPort = 8081
+          hostPort      = 8081
+          protocol      = "tcp"
+        }
+      ]
+      environment = [
+        for key, value in local.moai_secret_map : {
+          name  = key
+          value = value
         }
       ]
       logConfiguration = {
@@ -335,58 +326,50 @@ resource "aws_ecs_service" "moai_service" {
 
 # --- AEGIS Service ---
 
-resource "aws_secretsmanager_secret" "aegis_secret" {
-  name        = "aegis/env"
-  description = "Environment variables for Aegis service"
-}
-
-resource "aws_secretsmanager_secret_version" "aegis_secret_version" {
-  secret_id     = aws_secretsmanager_secret.aegis_secret.id
-  secret_string = jsonencode({
-    DB_NAME                  = "aegis",
-    DB_SYNCHRONIZE           = "false",
-    DB_LOGGING               = "false",
-    JWT_EXPIRES_IN           = "1h",
-    JWT_AUDIENCE             = "aegis-api",
-    JWT_ISSUER               = "moai-auth-service",
-    MOAI_AUTH_BASE_URL       = "http://moai-auth-service:10001",
-    MOAI_AUTH_CLIENT_ID      = "aegis-service",
-    MOAI_AUTH_CLIENT_SECRET  = "eICKpNek4XGBEQdgeLZQ24+gvf51C1BLq7OPCcJjH8UKYXq3sicuPRdSE3JM/TFJhKDuqSkkaiSc/ipdREzjHw==",
-    MOAI_API_URL             = "http://moai-auth-service:10001",
-    MOAI_API_KEY             = "31b68da6a026747862480491e23b7b5c45234441aa451e452a246e949ff32daf",
-    DATABASE_URL             = "mysql://${var.db_username}:${var.db_password}@${var.rds_endpoint}/aegis",
-    DEFAULT_TENANT_ID        = "default-entity",
-    SERVICE_AUTH_API_KEYS    = "moai-auth-key,test-key",
-    SERVICE_AUTH_MTLS_ENABLED = "false",
-    SERVICE_AUTH_RATE_LIMIT_MAX = "100",
-    SERVICE_AUTH_RATE_LIMIT_WINDOW_MS = "60000",
-    VALKEY_HOST              = "valkey-service",
-    VALKEY_PORT              = "6379",
-    VALKEY_TTL               = "1",
-    TPM_SERVICE_URL          = "http://tpm-service:10005",
-    WEBHOOK_ENDPOINTS        = "https://example.com/webhook,https://backup.example.com/webhook",
-    WEBHOOK_SECRET           = "your-webhook-secret",
-    SYNC_MOAI                = "true",
-    DB_TYPE                  = "mysql"
-  })
-}
-
 locals {
-  aegis_secret_map = jsondecode(aws_secretsmanager_secret_version.aegis_secret_version.secret_string)
+  aegis_env_map = {
+    DB_NAME                        = "aegis"
+    DB_SYNCHRONIZE                 = "false"
+    DB_LOGGING                     = "false"
+    JWT_EXPIRES_IN                 = "1h"
+    JWT_AUDIENCE                   = "aegis-api"
+    JWT_ISSUER                     = "moai-auth-service"
+    MOAI_AUTH_BASE_URL             = "http://moai-auth-service:10001"
+    MOAI_AUTH_CLIENT_ID            = "aegis-service"
+    MOAI_AUTH_CLIENT_SECRET        = "eICKpNek4XGBEQdgeLZQ24+gvf51C1BLq7OPCcJjH8UKYXq3sicuPRdSE3JM/TFJhKDuqSkkaiSc/ipdREzjHw=="
+    MOAI_API_URL                   = "http://moai-auth-service:10001"
+    MOAI_API_KEY                   = "31b68da6a026747862480491e23b7b5c45234441aa451e452a246e949ff32daf"
+    DATABASE_URL                   = "mysql://${var.db_username}:${var.db_password}@${var.rds_endpoint}/aegis"
+    DEFAULT_TENANT_ID              = "default-entity"
+    SERVICE_AUTH_API_KEYS          = "moai-auth-key,test-key"
+    SERVICE_AUTH_MTLS_ENABLED      = "false"
+    SERVICE_AUTH_RATE_LIMIT_MAX    = "100"
+    SERVICE_AUTH_RATE_LIMIT_WINDOW_MS = "60000"
+    VALKEY_HOST                    = "valkey-service"
+    VALKEY_PORT                    = "6379"
+    VALKEY_TTL                     = "1"
+    TPM_SERVICE_URL                = "http://tpm-service:10005"
+    WEBHOOK_ENDPOINTS              = "https://example.com/webhook,https://backup.example.com/webhook"
+    WEBHOOK_SECRET                 = "your-webhook-secret"
+    SYNC_MOAI                      = "true"
+    DB_TYPE                        = "mysql"
+  }
 
   aegis_container_def = [
     {
       name  = "aegis_service"
       image = "${aws_ecr_repository.aegis_repo.repository_url}:${var.aegis_image_tag}"
-      portMappings = [{
-        containerPort = 3000
-        hostPort      = 3000
-        protocol      = "tcp"
-      }]
-      secrets = [
-        for key in keys(local.aegis_secret_map) : {
-          name      = key
-          valueFrom = "${aws_secretsmanager_secret.aegis_secret.arn}:${key}"
+      portMappings = [
+        {
+          containerPort = 3000
+          hostPort      = 3000
+          protocol      = "tcp"
+        }
+      ]
+      environment = [
+        for key, value in local.aegis_env_map : {
+          name  = key
+          value = value
         }
       ]
       logConfiguration = {
@@ -407,6 +390,7 @@ locals {
     }
   ]
 }
+
 
 
 
@@ -488,47 +472,42 @@ resource "aws_efs_access_point" "valkey_access_point" {
   }
 }
 
-resource "aws_secretsmanager_secret" "valkey_secret" {
-  name        = "valkey/env"
-  description = "Environment variables for valkey service"
-}
-
-resource "aws_secretsmanager_secret_version" "valkey_secret_version" {
-  secret_id     = aws_secretsmanager_secret.valkey_secret.id
-  secret_string = jsonencode({
-    VALKEY_PASSWORD  = "valkey-passw0rd"
-  })
-}
 
 
 locals {
-  valkey_secret_map = jsondecode(aws_secretsmanager_secret_version.valkey_secret_version.secret_string)
+  valkey_env_map = {
+    VALKEY_PASSWORD = "valkey-passw0rd"
+  }
 
   valkey_container_def = [
     {
       name  = "valkey-service"
       image = "${aws_ecr_repository.valkey_repo.repository_url}:${var.valkey_image_tag}"
-      portMappings = [{
-        containerPort = 6379
-        hostPort      = 6379
-        protocol      = "tcp"
-      }]
-      secrets = [
-        for key in keys(local.valkey_secret_map) : {
-          name      = key
-          valueFrom = aws_secretsmanager_secret.valkey_secret.arn
+      portMappings = [
+        {
+          containerPort = 6379
+          hostPort      = 6379
+          protocol      = "tcp"
+        }
+      ]
+      environment = [
+        for key, value in local.valkey_env_map : {
+          name  = key
+          value = value
         }
       ]
       command = [
-        "--requirepass", "valkey-passw0rd",
+        "--requirepass", local.valkey_env_map["VALKEY_PASSWORD"],
         "--dir", "/data",
         "--dbfilename", "dump.rdb"
       ]
-      mountPoints = [{
-        containerPath = "/data"
-        sourceVolume  = "valkey-data"
-        readOnly      = false
-      }]
+      mountPoints = [
+        {
+          containerPath = "/data"
+          sourceVolume  = "valkey-data"
+          readOnly      = false
+        }
+      ]
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -547,6 +526,7 @@ locals {
     }
   ]
 }
+
 
 
 
