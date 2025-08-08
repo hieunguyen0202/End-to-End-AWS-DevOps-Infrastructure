@@ -13,13 +13,3 @@ output "rds_port" {
   value       = aws_db_instance.rds.port
 }
 
-
-output "elasticache_endpoint" {
-  description = "ElastiCache Memcached endpoint"
-  value       = aws_elasticache_cluster.memcached.arn
-}
-
-output "elasticache_port" {
-  description = "ElastiCache Memcached port"
-  value       = aws_elasticache_cluster.memcached.port
-}

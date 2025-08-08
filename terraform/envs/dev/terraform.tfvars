@@ -37,12 +37,23 @@ nginx_instance_name = "aj3-aws-infra-vpc2-nginx-vm-dev"
 volume_size   = 10
 
 # ECS module
-ecr_repo_name                 = "aj3-aws-infra-ecr-repo-dev"
+ecr_moai_repo_name            = "aj3-aws-infra-moai-ecr-repo-dev"
+ecr_aegis_repo_name           = "aj3-aws-infra-aegis-ecr-repo-dev"
+ecr_valkey_repo_name          = "aj3-aws-infra-val-ecr-repo-dev"
 aws_ecs_cluster_name          = "aj3-aws-infra-ecs-cluster-dev"
 aws_ecs_task_definition_name  = "aj3-aws-infra-ecs-task-def-dev"
-backend_task_family           = "aj3-aws-infra-ecs-backend-task-dev"
-backend_service_name          = "aj3-aws-infra-ecs-app-tomcat-dev"
-backend_image_tag             = "0.0.0"
+moai_image_tag                = "0.0.0"
+aegis_image_tag               = "0.0.0"
+valkey_image_tag              = "0.0.0"
 container_port                = 8080
 host_port                     = 8080
 aws_ecs_service               = "aj3-aws-infra-ecs-service-dev"
+
+
+# Database module
+db_subnet_group_name        = "aj3-aws-infra-rds-sub-grp-dev"
+db_parameter_group_name     = "aj3-aws-infra-rds-para-grp-dev"
+db_identifier               = "aj3-aws-infra-rds-mysql-db-dev"
+db_name                     = "moai_auth"
+db_username                 = "admin"
+db_password                 = "StrongPassw0rd"

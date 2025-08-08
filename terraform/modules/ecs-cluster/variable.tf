@@ -3,7 +3,17 @@ variable "project" {
   type        = string
 }
 
-variable "ecr_repo_name" {
+variable "ecr_moai_repo_name" {
+  type        = string
+  description = "Name of the ECR repository"
+}
+
+variable "ecr_aegis_repo_name" {
+  type        = string
+  description = "Name of the ECR repository"
+}
+
+variable "ecr_valkey_repo_name" {
   type        = string
   description = "Name of the ECR repository"
 }
@@ -19,24 +29,40 @@ variable "aws_ecs_task_definition_name" {
   description = "Name of the ecs task definition"
 }
 
-
-variable "backend_task_family" {
+variable "db_username" {
   type        = string
-  description = "Family name for the backend ECS task definition"
+  description = "Username for RDS database"
 }
 
-
-variable "backend_service_name" {
+variable "db_password" {
   type        = string
-  description = "Name of the backend ECS service"
+  description = "Password for RDS database"
+  sensitive   = true
 }
 
+variable "rds_endpoint" {
+  type        = string
+  description = "RDS database endpoint"
+}
 
-variable "backend_image_tag" {
+variable "moai_image_tag" {
   type        = string
   description = "ECR image tag to deploy"
   default     = "latest"
 }
+
+variable "aegis_image_tag" {
+  type        = string
+  description = "ECR image tag to deploy"
+  default     = "latest"
+}
+
+variable "valkey_image_tag" {
+  type        = string
+  description = "ECR image tag to deploy"
+  default     = "latest"
+}
+
 
 variable "container_port" {
   type        = number

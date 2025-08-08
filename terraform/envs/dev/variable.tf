@@ -158,10 +158,21 @@ variable "nginx_instance_name" {
 
 # ECS module
 
-variable "ecr_repo_name" {
+variable "ecr_moai_repo_name" {
   type        = string
   description = "Name of the ECR repository"
 }
+
+variable "ecr_aegis_repo_name" {
+  type        = string
+  description = "Name of the ECR repository"
+}
+
+variable "ecr_valkey_repo_name" {
+  type        = string
+  description = "Name of the ECR repository"
+}
+
 
 
 variable "aws_ecs_cluster_name" {
@@ -175,19 +186,19 @@ variable "aws_ecs_task_definition_name" {
 }
 
 
-variable "backend_task_family" {
+variable "moai_image_tag" {
   type        = string
-  description = "Family name for the backend ECS task definition"
+  description = "ECR image tag to deploy"
+  default     = "latest"
 }
 
-
-variable "backend_service_name" {
+variable "aegis_image_tag" {
   type        = string
-  description = "Name of the backend ECS service"
+  description = "ECR image tag to deploy"
+  default     = "latest"
 }
 
-
-variable "backend_image_tag" {
+variable "valkey_image_tag" {
   type        = string
   description = "ECR image tag to deploy"
   default     = "latest"
@@ -212,3 +223,32 @@ variable "aws_ecs_service" {
   description = "Name of the ECS service"
 }
 
+
+# Database
+
+variable "db_subnet_group_name" {
+  default = "aws-infra-03-rds-sub-grp"
+}
+
+variable "db_parameter_group_name" {
+  default = "aws-infra-03-para-grp"
+}
+
+variable "db_identifier" {
+  default = "aws-infra-03-rds-mysql-db"
+}
+
+variable "db_name" {
+  default = "mydatabase"
+}
+
+variable "db_username" {
+  type        = string
+  description = "Username for RDS database"
+}
+
+variable "db_password" {
+  type        = string
+  description = "Password for RDS database"
+  sensitive   = true
+}

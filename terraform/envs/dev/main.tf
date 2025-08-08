@@ -75,12 +75,14 @@ module "bastion" {
 
 module "ecs-cluster" {
   source                        = "../../modules/ecs-cluster"
-  ecr_repo_name                 = var.ecr_repo_name
+  ecr_moai_repo_name            = var.ecr_moai_repo_name
+  ecr_aegis_repo_name           = var.ecr_aegis_repo_name
+  ecr_valkey_repo_name          = var.ecr_valkey_repo_name
   aws_ecs_cluster_name          = var.aws_ecs_cluster_name
   aws_ecs_task_definition_name  = var.aws_ecs_task_definition_name
-  backend_task_family           = var.backend_task_family
-  backend_service_name          = var.backend_service_name
-  backend_image_tag             = var.backend_image_tag
+  moai_image_tag                = var.moai_image_tag
+  aegis_image_tag               = var.aegis_image_tag
+  valkey_image_tag              = var.valkey_image_tag
   container_port                = var.container_port
   host_port                     = var.host_port
   private_subnet_ids            = module.network.aws_app_subnet_private_ids
@@ -90,4 +92,22 @@ module "ecs-cluster" {
   aws_region                    = var.region
   vpc2_id                       = module.network.vpc2_id
   efs_sg_id                     = module.security.efs_security_group_id
+  db_username                   = var.db_username
+  db_password                   = var.db_password
+  rds_endpoint                  = module.database.rds_endpoint
+}
+
+
+module "database" {
+  source                        = "../../modules/database"
+  db_subnet_group_name          = var.db_subnet_group_name
+  db_parameter_group_name       = var.db_parameter_group_name
+  db_identifier                 = var.db_identifier
+  db_name                       = var.db_name
+  db_username                   = var.db_username
+  db_password                   = var.db_password
+  security_group_id             = module.security.database_security_group_id
+  availability_zones            = var.availability_zones
+  subnet_ids                    = module.network.aws_app_subnet_private_ids
+  project                       = var.project
 }
