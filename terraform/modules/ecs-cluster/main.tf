@@ -488,10 +488,10 @@ resource "aws_efs_mount_target" "valkey_mount_targets" {
 resource "aws_efs_access_point" "valkey_access_point" {
   file_system_id = aws_efs_file_system.valkey_efs.id
 
-  posix_user {
-    gid = 1000
-    uid = 1000
-  }
+  # posix_user {
+  #   gid = 1000
+  #   uid = 1000
+  # }
 
   root_directory {
     path = "/valkey-data"
