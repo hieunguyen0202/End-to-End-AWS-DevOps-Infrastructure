@@ -76,6 +76,28 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_attach" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+
+resource "aws_iam_role_policy" "valkey_task_policy" {
+  name = "valkey-efs-access"
+  role = aws_iam_role.ecs_task_execution_role.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "elasticfilesystem:ClientMount",
+          "elasticfilesystem:ClientWrite",
+          "elasticfilesystem:ClientRootAccess"
+        ],
+        Effect   = "Allow",
+        Resource = aws_efs_access_point.valkey_access_point.arn
+      }
+    ]
+  })
+}
+
+
 # Custom inline policy to allow secrets access
 # resource "aws_iam_role_policy" "ecs_secrets_access" {
 #   name = "ecsSecretsAccessPolicy"
@@ -439,7 +461,7 @@ resource "aws_ecs_service" "aegis_service" {
   )
 }
 
-# --- EFS Access Point ---
+# --- EFS ---
 resource "aws_efs_file_system" "valkey_efs" {
   creation_token = "valkey_efs"
 
@@ -450,6 +472,17 @@ resource "aws_efs_file_system" "valkey_efs" {
       }
   )
 }
+
+
+resource "aws_efs_mount_target" "valkey_mount_targets" {
+  for_each = toset(var.private_subnet_ids)
+
+  file_system_id  = aws_efs_file_system.valkey_efs.id
+  subnet_id       = each.value
+  security_groups = [var.efs_sg_id]
+}
+
+
 
 # --- EFS Access Point ---
 resource "aws_efs_access_point" "valkey_access_point" {
