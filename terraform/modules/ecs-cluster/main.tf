@@ -496,9 +496,9 @@ resource "aws_efs_access_point" "valkey_access_point" {
   root_directory {
     path = "/valkey-data"
     creation_info {
-      owner_gid   = 1000
-      owner_uid   = 1000
-      permissions = "0755"
+      owner_gid   = 0
+      owner_uid   = 0
+      permissions = "0777"
     }
   }
 
