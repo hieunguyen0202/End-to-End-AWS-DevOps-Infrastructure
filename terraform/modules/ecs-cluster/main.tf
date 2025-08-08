@@ -525,6 +525,10 @@ locals {
           protocol      = "tcp"
         }
       ]
+
+      linuxParameters = {
+        user = "0"
+      }
       environment = [
         for key, value in local.valkey_env_map : {
           name  = key
