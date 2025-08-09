@@ -314,7 +314,7 @@ locals {
     MEMCACHED_STANDBY_HOST       = "memcached.service.local"
     MEMCACHED_STANDBY_PORT       = "11212"
     RABBITMQ_ADDRESS             = "rabbitmq.service.local"
-    RABBITMQ_PORT                = "15672"
+    RABBITMQ_PORT                = "5672"
     RABBITMQ_USERNAME            = "guest"
     RABBITMQ_PASSWORD            = "rabbitmq-passw0rd"
   }
@@ -344,13 +344,13 @@ locals {
           awslogs-stream-prefix = "ecs"
         }
       }
-      # healthCheck = {
-      #   command     = ["CMD-SHELL", "curl -f http://localhost:8081/health || exit 1"]
-      #   interval    = 20
-      #   timeout     = 3
-      #   retries     = 3
-      #   startPeriod = 30
-      # }
+      healthCheck = {
+        command     = ["CMD-SHELL", "wget -q --spider http://localhost:8080/login || exit 1"]
+        interval    = 20
+        timeout     = 3
+        retries     = 3
+        startPeriod = 30
+      }
     }
   ]
 }
@@ -573,8 +573,8 @@ locals {
       image = "${aws_ecr_repository.rabbitmq_repo.repository_url}:${var.rabbitmq_image_tag}"
       portMappings = [
         {
-          containerPort = 15672
-          hostPort      = 15672
+          containerPort = 5672
+          hostPort      = 5672
           protocol      = "tcp"
         }
       ]
