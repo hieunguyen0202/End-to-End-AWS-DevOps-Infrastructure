@@ -41,9 +41,9 @@ resource "aws_ecr_repository" "memcached_repo" {
 resource "aws_ecr_repository" "rabbitmq_repo" {
   name = var.ecr_rabbitmq_repo_name
 
-  lifecycle {
-    prevent_destroy = true
-  }
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 
   tags = merge(
       local.tags,
