@@ -243,7 +243,7 @@ resource "aws_lb_target_group" "tomcat_tg" {
   vpc_id      = var.vpc2_id
 
   health_check {
-    path                = "/"
+    path                = "/login"
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2
