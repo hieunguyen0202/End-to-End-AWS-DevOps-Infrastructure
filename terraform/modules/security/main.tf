@@ -161,7 +161,8 @@ resource "aws_security_group" "app_sg" {
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
-    cidr_blocks = ["10.0.10.0/24", "10.0.20.0/24"]
+    # cidr_blocks = ["10.0.10.0/24", "10.0.20.0/24"]
+    security_groups = [aws_security_group.alb_sg.id]
   }
 
   # ingress {
