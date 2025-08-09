@@ -95,6 +95,8 @@ module "ecs-cluster" {
   db_username                   = var.db_username
   db_password                   = var.db_password
   rds_endpoint                  = module.database.rds_endpoint
+  alb_security_group_id         = module.security.alb_security_group_id
+  public_subnet_ids             = module.network.aws_subnet_public_ids
 }
 
 

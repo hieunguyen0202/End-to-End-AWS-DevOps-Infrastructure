@@ -219,6 +219,59 @@ resource "aws_service_discovery_service" "rabbitmq" {
 }
 
 
+# ─────────────────────────────
+# ALB
+# ─────────────────────────────
+resource "aws_lb" "tomcat_alb" {
+  name               = "tomcat-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [var.alb_security_group_id]
+  subnets            = var.public_subnet_ids
+
+  tags = merge(local.tags, { Name = "tomcat-alb" })
+}
+
+# ─────────────────────────────
+# Target Group for Tomcat
+# ─────────────────────────────
+resource "aws_lb_target_group" "tomcat_tg" {
+  name        = "tomcat-tg"
+  port        = 8080
+  protocol    = "HTTP"
+  target_type = "ip" # Fargate uses IP target mode
+  vpc_id      = var.vpc2_id
+
+  health_check {
+    path                = "/"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    matcher             = "200-399"
+  }
+
+  tags = merge(local.tags, { Name = "tomcat-tg" })
+}
+
+
+
+# ─────────────────────────────
+# ALB Listener
+# ─────────────────────────────
+resource "aws_lb_listener" "tomcat_listener" {
+  load_balancer_arn = aws_lb.tomcat_alb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.tomcat_tg.arn
+  }
+}
+
+
+
 # --- tomcat Service ---
 
 locals {
@@ -309,6 +362,12 @@ resource "aws_ecs_service" "tomcat_service" {
     assign_public_ip = false
   }
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.tomcat_tg.arn
+    container_name   = "tomcat_auth_service"
+    container_port   = 8080
+  }
+
   service_registries {
     registry_arn = aws_service_discovery_service.tomcat.arn
   }
@@ -320,6 +379,8 @@ resource "aws_ecs_service" "tomcat_service" {
         Name = "tomcat_ecs_service"
       }
   )
+
+  depends_on = [aws_lb_listener.tomcat_listener]
 }
 
 

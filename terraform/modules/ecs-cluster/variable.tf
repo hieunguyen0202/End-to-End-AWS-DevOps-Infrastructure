@@ -89,6 +89,11 @@ variable "private_subnet_ids" {
   description = "List of private subnet IDs for ECS services"
 }
 
+variable "public_subnet_ids" {
+  description = "List of public subnet IDs for the ALB"
+  type        = list(string)
+}
+
 variable "app_security_group_id" {
   type        = string
   description = "Security group ID to be associated with ECS services"
@@ -97,6 +102,11 @@ variable "app_security_group_id" {
 variable "efs_sg_id" {
   type        = string
   description = "Security group ID to be associated with aws_efs_mount_target"
+}
+
+variable "alb_security_group_id" {
+  description = "Security group ID to attach to the Application Load Balancer"
+  type        = string
 }
 
 variable "aws_ecs_service" {
