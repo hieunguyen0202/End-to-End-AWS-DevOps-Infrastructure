@@ -228,11 +228,11 @@ locals {
     JDBC_USERNAME                = "${var.db_username}"
     JDBC_PASSWORD                = "${var.db_password}"
     MEMCACHED_ACTIVE_HOST        = "memcached.service.local"
-    MEMCACHED_ACTIVE_PORT        = 11211
+    MEMCACHED_ACTIVE_PORT        = "11211"
     MEMCACHED_STANDBY_HOST       = "memcached.service.local"
-    MEMCACHED_STANDBY_PORT       = 11212
+    MEMCACHED_STANDBY_PORT       = "11212"
     RABBITMQ_ADDRESS             = "rabbitmq.service.local"
-    RABBITMQ_PORT                = 15672
+    RABBITMQ_PORT                = "15672"
     RABBITMQ_USERNAME            = "guest"
     RABBITMQ_PASSWORD            = "rabbitmq-passw0rd"
   }

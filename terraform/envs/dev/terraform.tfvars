@@ -39,7 +39,7 @@ volume_size   = 10
 # ECS module
 ecr_tomcat_repo_name            = "aj3-aws-infra-tomcat-ecr-repo-dev"
 ecr_memcached_repo_name           = "aj3-aws-infra-memcached-ecr-repo-dev"
-ecr_rabbitmq_repo_name          = "aj3-aws-infra-val-ecr-repo-dev"
+ecr_rabbitmq_repo_name          = "aj3-aws-infra-rabbitmq-ecr-repo-dev"
 aws_ecs_cluster_name          = "aj3-aws-infra-ecs-cluster-dev"
 aws_ecs_task_definition_name  = "aj3-aws-infra-ecs-task-def-dev"
 tomcat_image_tag                = "0.0.0"
