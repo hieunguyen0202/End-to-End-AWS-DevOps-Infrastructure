@@ -277,7 +277,7 @@ resource "aws_lb_listener" "tomcat_listener" {
 locals {
   tomcat_secret_map = {
     JDBC_DRIVER                  = "com.mysql.jdbc.Driver"
-    JDBC_URL                     = "jdbc:mysql://${var.rds_endpoint}:3306/accounts"
+    JDBC_URL                     = "jdbc:mysql://${var.rds_endpoint}/accounts"
     JDBC_USERNAME                = "${var.db_username}"
     JDBC_PASSWORD                = "${var.db_password}"
     MEMCACHED_ACTIVE_HOST        = "memcached.service.local"
