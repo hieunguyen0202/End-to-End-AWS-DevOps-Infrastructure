@@ -15,14 +15,9 @@ variable "project" {
   type        = string
 }
 
-variable "public_nlb_sg_name" {
+variable "public_alb_sg_name" {
   type        = string
-  description = "Name of Public NLB Security Group"
-}
-
-variable "nginx_sg_name" {
-  type        = string
-  description = "Name of the nginx security group"
+  description = "Name of Public ALB Security Group"
 }
 
 

@@ -233,3 +233,74 @@ resource "aws_route" "bastion_to_main" {
   destination_cidr_block = var.cidr_block
   vpc_peering_connection_id = aws_vpc_peering_connection.main_bastion.id
 }
+
+
+
+# IAM Role for VPC Flow Logs
+resource "aws_iam_role" "vpc_flow_logs_role" {
+  name = "vpc-flow-logs-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "vpc-flow-logs.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = merge(
+    local.tags,
+    {
+      Name = "vpc-flow-logs-role"
+    }
+  )
+}
+
+# IAM Policy for VPC Flow Logs to write to CloudWatch Logs
+resource "aws_iam_role_policy" "vpc_flow_logs_policy" {
+  name = "vpc-flow-logs-policy"
+  role = aws_iam_role.vpc_flow_logs_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+
+# CloudWatch Log Group
+resource "aws_cloudwatch_log_group" "vpc_flow_logs_group" {
+  name              = "/vpc/flow-logs"
+  retention_in_days = 30
+
+  tags = {
+    Name = "VPC Flow Logs Group"
+  }
+}
+
+
+# VPC Flow Logs
+resource "aws_flow_log" "vpc_flow_logs" {
+  log_destination      = aws_cloudwatch_log_group.vpc_flow_logs_group.arn
+  log_destination_type = "cloud-watch-logs"
+  iam_role_arn         = aws_iam_role.vpc_flow_logs_role.arn
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.main.id
+}

@@ -49,8 +49,7 @@ module "security" {
   source            = "../../modules/security"
   vpc1_id           = module.network.vpc1_id
   vpc2_id           = module.network.vpc2_id
-  public_nlb_sg_name     = var.public_nlb_sg_name
-  nginx_sg_name     = var.nginx_sg_name
+  public_alb_sg_name     = var.public_alb_sg_name
   app_sg_name       = var.app_sg_name
   bastion_sg_name   = var.bastion_sg_name
   database_sg_name  = var.database_sg_name
@@ -63,11 +62,10 @@ module "bastion" {
   instance_type             = var.instance_type
   key_name                  = var.key_name
   subnet_id                 = module.network.aws_bastion_subnet_public_id
-  nginx_subnet_id           = module.network.aws_nginx_subnet_public_id
+  # nginx_subnet_id           = module.network.aws_nginx_subnet_public_id
   bastion_security_group_id = [module.security.bastion_security_group_id]
-  nginx_security_group_id   = [module.security.nginx_security_group_id]
   instance_name             = var.instance_name
-  nginx_instance_name       = var.nginx_instance_name
+  # nginx_instance_name       = var.nginx_instance_name
   volume_size               = var.volume_size
   project                   = var.project
 }
@@ -91,7 +89,6 @@ module "ecs-cluster" {
   project                       = var.project
   aws_region                    = var.region
   vpc2_id                       = module.network.vpc2_id
-  efs_sg_id                     = module.security.efs_security_group_id
   db_username                   = var.db_username
   db_password                   = var.db_password
   rds_endpoint                  = module.database.rds_endpoint

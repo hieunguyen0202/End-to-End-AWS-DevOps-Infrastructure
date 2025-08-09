@@ -44,7 +44,7 @@ resource "aws_db_instance" "rds" {
   availability_zone       = var.availability_zones[0]
   multi_az                = false
   skip_final_snapshot     = true
-  publicly_accessible     = true
+  publicly_accessible     = false 
   port                    = 3306
   apply_immediately       = true
 

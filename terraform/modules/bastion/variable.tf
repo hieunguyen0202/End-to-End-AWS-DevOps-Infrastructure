@@ -29,10 +29,10 @@ variable "bastion_security_group_id" {
 }
 
 
-variable "nginx_security_group_id" {
-  description = "Security Group ID for nginx server"
-  type        = list(string)
-}
+# variable "nginx_security_group_id" {
+#   description = "Security Group ID for nginx server"
+#   type        = list(string)
+# }
 
 variable "instance_name" {
   description = "Name tag for the bastion instance"
@@ -45,12 +45,12 @@ variable "volume_size" {
   type        = number
 }
 
-variable "nginx_instance_name" {
-  description = "Name tag for the nginx instance"
-  type        = string
-}
+# variable "nginx_instance_name" {
+#   description = "Name tag for the nginx instance"
+#   type        = string
+# }
 
-variable "nginx_subnet_id" {
-  description = "Public subnet ID for nginx"
-  type        = string
-}
+# variable "nginx_subnet_id" {
+#   description = "Public subnet ID for nginx"
+#   type        = string
+# }

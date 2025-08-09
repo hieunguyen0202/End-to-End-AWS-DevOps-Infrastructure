@@ -5,10 +5,10 @@ locals {
 }
 
 
-# Public NLB Security Group
+# Public ALB Security Group
 
-resource "aws_security_group" "public_nlb_sg" {
-  name        = var.public_nlb_sg_name
+resource "aws_security_group" "public_alb_sg" {
+  name        = var.public_alb_sg_name
   description = "Allow HTTP/HTTPS traffic from internet"
   vpc_id      = var.vpc2_id
 
@@ -34,115 +34,24 @@ resource "aws_security_group" "public_nlb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Allow outbound traffic to ECS
+  # egress {
+  #   from_port       = 8080
+  #   to_port         = 8080
+  #   protocol        = "tcp"
+  #   security_groups = [aws_security_group.app_sg.id]
+  # }
+
   tags = merge(
       local.tags,
       {
-        Name = var.public_nlb_sg_name
+        Name = var.public_alb_sg_name
       }
   )
 }
 
 
-# Private NGINX Security Group
-
-resource "aws_security_group" "nginx_sg" {
-  name        = var.nginx_sg_name
-  description = "Allow HTTP/HTTPS traffic from Public NLB Security Group"
-  vpc_id      = var.vpc2_id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    security_groups = [aws_security_group.public_nlb_sg.id]
-  }
-
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    security_groups = [aws_security_group.bastion_sg.id]
-  }
-
-  # Allow ICMP ping (Echo Request - type 8, any code)
-  ingress {
-    from_port   = 8
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"] # Or ["0.0.0.0/0"] if from anywhere
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  depends_on = [aws_security_group.bastion_sg]
-
-  tags = merge(
-      local.tags,
-      {
-        Name = var.nginx_sg_name
-      }
-  )
-}
-
-# Private NLB Security Group
-
-# resource "aws_security_group" "private_nlb_sg" {
-#   name        = var.private_nlb_sg_name
-#   description = "Allow app ports from NGINX SG"
-#   vpc_id      = var.vpc2_id
-
-
-#   ingress {
-#     from_port       = 8080
-#     to_port         = 8080
-#     protocol        = "tcp"
-#     security_groups = [aws_security_group.nginx_sg.id]
-#   }
-
-#   # ingress {
-#   #   from_port   = 8080
-#   #   to_port     = 8080
-#   #   protocol    = "tcp"
-#   #   cidr_blocks = ["10.0.10.0/24", "10.0.20.0/24"]
-#   # }
-
-#   # ingress {
-#   #   from_port   = 80
-#   #   to_port     = 80
-#   #   protocol    = "tcp"
-#   #   cidr_blocks = ["10.0.10.0/24", "10.0.20.0/24"]
-#   # }
-
-#   egress {
-#     from_port   = 0
-#     to_port     = 0
-#     protocol    = "-1"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-
-#   tags = merge(
-#       local.tags,
-#       {
-#         Name = var.private_nlb_sg_name
-#       }
-#   )
-
-# }
-
-
-# ECS Task Security Group
+# ECS Security Group (VPC2 - private subnet)
 
 resource "aws_security_group" "app_sg" {
   name        = var.app_sg_name
@@ -150,28 +59,55 @@ resource "aws_security_group" "app_sg" {
   vpc_id      = var.vpc2_id
 
 
+  # Allow traffic from ALB on port 8080
   ingress {
-    from_port       = 80
-    to_port         = 80
+    from_port       = 8080
+    to_port         = 8080
     protocol        = "tcp"
-    cidr_blocks     = ["0.0.0.0/0"]
+    security_groups = [aws_security_group.public_alb_sg.id]
+
   }
 
   ingress {
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    # cidr_blocks = ["10.0.10.0/24", "10.0.20.0/24"]
-    cidr_blocks     = ["0.0.0.0/0"]
-  }
-
-  # Allow all traffic within the same SG
-  ingress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
+    from_port       = 5672
+    to_port         = 5672
+    protocol        = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+
+   # Memcached from ECS (itself or same SG)
+  ingress {
+    from_port       = 11211
+    to_port         = 11211
+    protocol        = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Allow access from Bastion via peering for exec/logs
+  ingress {
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion_sg.id]
+  }
+
+  # Allow ICMP (ping) from Bastion host
+  ingress {
+    from_port       = -1
+    to_port         = -1
+    protocol        = "icmp"
+    security_groups = [aws_security_group.bastion_sg.id]
+  }
+
+  
+  # Outbound to RDS on port 3306
+  # egress {
+  #   from_port       = 3306
+  #   to_port         = 3306
+  #   protocol        = "tcp"
+  #   security_groups = [aws_security_group.database_sg.id]
+  # }
 
   egress {
     from_port   = 0
@@ -188,6 +124,61 @@ resource "aws_security_group" "app_sg" {
   )
 
 }
+
+
+
+# Private DB Security Group
+
+resource "aws_security_group" "database_sg" {
+  name        = var.database_sg_name
+  description = "Allow MongoDB from private and bastion SGs"
+  vpc_id      = var.vpc2_id
+
+  # Allow from ECS on port 443
+  ingress {
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.app_sg.id]
+  }
+
+
+  # # Allow from private SG
+  # ingress {
+  #   description     = "Allow from private SG"
+  #   from_port       = 0
+  #   to_port         = 65535
+  #   protocol        = "tcp"
+  #   security_groups = [aws_security_group.app_sg.id]
+  # }
+
+  # Allow from Bastion for SQL commands
+  ingress {
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(
+      local.tags,
+      {
+        Name = var.database_sg_name
+      }
+  )
+}
+
+
+
+
+
 
 # Bastion Host Security Group
 
@@ -220,104 +211,55 @@ resource "aws_security_group" "bastion_sg" {
 }
 
 
-# Private DB Security Group
+# # ─────────────────────────────
+# # Security Group for ALB
+# # ─────────────────────────────
+# resource "aws_security_group" "alb_sg" {
+#   name        = "tomcat-alb-sg"
+#   description = "Security group for Tomcat ALB"
+#   vpc_id      = var.vpc2_id
 
-resource "aws_security_group" "database_sg" {
-  name        = var.database_sg_name
-  description = "Allow MongoDB from private and bastion SGs"
-  vpc_id      = var.vpc2_id
+#   # Inbound: Allow HTTP from anywhere
+#   ingress {
+#     description = "Allow HTTP traffic"
+#     from_port   = 80
+#     to_port     = 80
+#     protocol    = "tcp"
+#     cidr_blocks = ["0.0.0.0/0"]
+#     ipv6_cidr_blocks = ["::/0"]
+#   }
 
-  # Allow from private SG
-  ingress {
-    description     = "Allow from private SG"
-    from_port       = 0
-    to_port         = 65535
-    protocol        = "tcp"
-    security_groups = [aws_security_group.app_sg.id]
-  }
+#   # Outbound: Allow all traffic (needed for ALB to reach ECS tasks)
+#   egress {
+#     description = "Allow all outbound traffic"
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#     ipv6_cidr_blocks = ["::/0"]
+#   }
 
-  # Allow from bastion SG
-  ingress {
-    description     = "Allow from bastion SG"
-    from_port       = 0
-    to_port         = 65535
-    protocol        = "tcp"
-    security_groups = [aws_security_group.nginx_sg.id]
-  }
-
-  # Allow self-communication inside the database SG
-  ingress {
-    description     = "Allow internal database SG traffic"
-    from_port       = 0
-    to_port         = 65535
-    protocol        = "tcp"
-    self            = true
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(
-      local.tags,
-      {
-        Name = var.database_sg_name
-      }
-  )
-}
+#   tags = merge(local.tags, { Name = "tomcat-alb-sg" })
+# }
 
 
-resource "aws_security_group" "efs_sg" {
-  name        = "efs-sg"
-  description = "Allow NFS access from ECS tasks"
-  vpc_id      = var.vpc2_id
 
-  ingress {
-    from_port   = 2049
-    to_port     = 2049
-    protocol    = "tcp"
-    cidr_blocks = ["10.0.0.0/16"]  # Adjust based on your VPC CIDR
-  }
+# resource "aws_security_group" "efs_sg" {
+#   name        = "efs-sg"
+#   description = "Allow NFS access from ECS tasks"
+#   vpc_id      = var.vpc2_id
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
+#   ingress {
+#     from_port   = 2049
+#     to_port     = 2049
+#     protocol    = "tcp"
+#     cidr_blocks = ["10.0.0.0/16"]  # Adjust based on your VPC CIDR
+#   }
 
-
-# ─────────────────────────────
-# Security Group for ALB
-# ─────────────────────────────
-resource "aws_security_group" "alb_sg" {
-  name        = "tomcat-alb-sg"
-  description = "Security group for Tomcat ALB"
-  vpc_id      = var.vpc2_id
-
-  # Inbound: Allow HTTP from anywhere
-  ingress {
-    description = "Allow HTTP traffic"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
-
-  # Outbound: Allow all traffic (needed for ALB to reach ECS tasks)
-  egress {
-    description = "Allow all outbound traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
-
-  tags = merge(local.tags, { Name = "tomcat-alb-sg" })
-}
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+# }

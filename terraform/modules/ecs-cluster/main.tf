@@ -272,15 +272,15 @@ resource "aws_lb_target_group" "tomcat_tg" {
   vpc_id      = var.vpc2_id
 
   health_check {
-  path                = "/login"
-  protocol            = "HTTP"
-  matcher             = "200-399"
-  interval            = 30
-  timeout             = 5
-  healthy_threshold   = 2
-  unhealthy_threshold = 2
-  port                = "8080"
-}
+    path                = "/login"
+    port                = "8080"
+    protocol            = "HTTP"
+    matcher             = "200-399"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
 
   tags = merge(local.tags, { Name = "tomcat-tg" })
 }
@@ -347,9 +347,9 @@ locals {
         }
       }
       healthCheck = {
-        command     = ["CMD-SHELL", "wget -q --spider http://localhost:8080/login || exit 1"]
-        interval    = 20
-        timeout     = 3
+        command     = ["CMD-SHELL", "curl -f http://localhost:8080/login || exit 1"]
+        interval    = 30
+        timeout     = 5
         retries     = 3
         startPeriod = 30
       }

@@ -96,14 +96,9 @@ variable "bastion_public_rt_name" {
 
 # Security Group Module
 
-variable "public_nlb_sg_name" {
+variable "public_alb_sg_name" {
   type        = string
   description = "Name of Public NLB Security Group"
-}
-
-variable "nginx_sg_name" {
-  type        = string
-  description = "Name of the nginx security group"
 }
 
 
@@ -150,10 +145,10 @@ variable "volume_size" {
   type        = number
 }
 
-variable "nginx_instance_name" {
-  description = "Name tag for the nginx instance"
-  type        = string
-}
+# variable "nginx_instance_name" {
+#   description = "Name tag for the nginx instance"
+#   type        = string
+# }
 
 
 # ECS module
