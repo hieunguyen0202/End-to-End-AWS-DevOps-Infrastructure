@@ -75,14 +75,14 @@ module "bastion" {
 
 module "ecs-cluster" {
   source                        = "../../modules/ecs-cluster"
-  ecr_moai_repo_name            = var.ecr_moai_repo_name
-  ecr_aegis_repo_name           = var.ecr_aegis_repo_name
-  ecr_valkey_repo_name          = var.ecr_valkey_repo_name
+  ecr_tomcat_repo_name            = var.ecr_tomcat_repo_name
+  ecr_memcached_repo_name           = var.ecr_memcached_repo_name
+  ecr_rabbitmq_repo_name          = var.ecr_rabbitmq_repo_name
   aws_ecs_cluster_name          = var.aws_ecs_cluster_name
   aws_ecs_task_definition_name  = var.aws_ecs_task_definition_name
-  moai_image_tag                = var.moai_image_tag
-  aegis_image_tag               = var.aegis_image_tag
-  valkey_image_tag              = var.valkey_image_tag
+  tomcat_image_tag                = var.tomcat_image_tag
+  memcached_image_tag               = var.memcached_image_tag
+  rabbitmq_image_tag              = var.rabbitmq_image_tag
   container_port                = var.container_port
   host_port                     = var.host_port
   private_subnet_ids            = module.network.aws_app_subnet_private_ids

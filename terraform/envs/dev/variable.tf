@@ -158,17 +158,17 @@ variable "nginx_instance_name" {
 
 # ECS module
 
-variable "ecr_moai_repo_name" {
+variable "ecr_tomcat_repo_name" {
   type        = string
   description = "Name of the ECR repository"
 }
 
-variable "ecr_aegis_repo_name" {
+variable "ecr_memcached_repo_name" {
   type        = string
   description = "Name of the ECR repository"
 }
 
-variable "ecr_valkey_repo_name" {
+variable "ecr_rabbitmq_repo_name" {
   type        = string
   description = "Name of the ECR repository"
 }
@@ -186,19 +186,19 @@ variable "aws_ecs_task_definition_name" {
 }
 
 
-variable "moai_image_tag" {
+variable "tomcat_image_tag" {
   type        = string
   description = "ECR image tag to deploy"
   default     = "latest"
 }
 
-variable "aegis_image_tag" {
+variable "memcached_image_tag" {
   type        = string
   description = "ECR image tag to deploy"
   default     = "latest"
 }
 
-variable "valkey_image_tag" {
+variable "rabbitmq_image_tag" {
   type        = string
   description = "ECR image tag to deploy"
   default     = "latest"

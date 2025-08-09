@@ -8,8 +8,8 @@ locals {
 
 
 # --- ECR Repository ---
-resource "aws_ecr_repository" "moai_repo" {
-  name = var.ecr_moai_repo_name
+resource "aws_ecr_repository" "tomcat_repo" {
+  name = var.ecr_tomcat_repo_name
 
   # lifecycle {
   #   prevent_destroy = true
@@ -18,13 +18,13 @@ resource "aws_ecr_repository" "moai_repo" {
   tags = merge(
       local.tags,
       {
-        Name = var.ecr_moai_repo_name
+        Name = var.ecr_tomcat_repo_name
       }
   )
 }
 
-resource "aws_ecr_repository" "aegis_repo" {
-  name = var.ecr_aegis_repo_name
+resource "aws_ecr_repository" "memcached_repo" {
+  name = var.ecr_memcached_repo_name
 
   lifecycle {
     prevent_destroy = true
@@ -33,13 +33,13 @@ resource "aws_ecr_repository" "aegis_repo" {
   tags = merge(
       local.tags,
       {
-        Name = var.ecr_aegis_repo_name
+        Name = var.ecr_memcached_repo_name
       }
   )
 }
 
-resource "aws_ecr_repository" "valkey_repo" {
-  name = var.ecr_valkey_repo_name
+resource "aws_ecr_repository" "rabbitmq_repo" {
+  name = var.ecr_rabbitmq_repo_name
 
   lifecycle {
     prevent_destroy = true
@@ -48,7 +48,7 @@ resource "aws_ecr_repository" "valkey_repo" {
   tags = merge(
       local.tags,
       {
-        Name = var.ecr_valkey_repo_name
+        Name = var.ecr_rabbitmq_repo_name
       }
   )
 }
@@ -77,25 +77,25 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_attach" {
 }
 
 
-resource "aws_iam_role_policy" "valkey_task_policy" {
-  name = "valkey-efs-access"
-  role = aws_iam_role.ecs_task_execution_role.name
+# resource "aws_iam_role_policy" "rabbitmq_task_policy" {
+#   name = "rabbitmq-efs-access"
+#   role = aws_iam_role.ecs_task_execution_role.name
 
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action = [
-          "elasticfilesystem:ClientMount",
-          "elasticfilesystem:ClientWrite",
-          "elasticfilesystem:ClientRootAccess"
-        ],
-        Effect   = "Allow",
-        Resource = aws_efs_access_point.valkey_access_point.arn
-      }
-    ]
-  })
-}
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Action = [
+#           "elasticfilesystem:ClientMount",
+#           "elasticfilesystem:ClientWrite",
+#           "elasticfilesystem:ClientRootAccess"
+#         ],
+#         Effect   = "Allow",
+#         Resource = aws_efs_access_point.rabbitmq_access_point.arn
+#       }
+#     ]
+#   })
+# }
 
 
 # Custom inline policy to allow secrets access
@@ -112,9 +112,9 @@ resource "aws_iam_role_policy" "valkey_task_policy" {
 #           "secretsmanager:GetSecretValue"
 #         ],
 #         Resource = [
-#           aws_secretsmanager_secret.aegis_secret.arn,
-#           aws_secretsmanager_secret.moai_secret.arn,
-#           aws_secretsmanager_secret.valkey_secret.arn
+#           aws_secretsmanager_secret.memcached_secret.arn,
+#           aws_secretsmanager_secret.tomcat_secret.arn,
+#           aws_secretsmanager_secret.rabbitmq_secret.arn
 #         ]
 #       }
 #     ]
@@ -123,22 +123,22 @@ resource "aws_iam_role_policy" "valkey_task_policy" {
 
 
 # Create a CloudWatch Log Group
-resource "aws_cloudwatch_log_group" "ecs_log_group_moai" {
-  name              = "/ecs/moai"
+resource "aws_cloudwatch_log_group" "ecs_log_group_tomcat" {
+  name              = "/ecs/tomcat"
   retention_in_days = 7
 
   tags = local.tags
 }
 
-resource "aws_cloudwatch_log_group" "ecs_log_group_aegis" {
-  name              = "/ecs/aegis"
+resource "aws_cloudwatch_log_group" "ecs_log_group_memcached" {
+  name              = "/ecs/memcached"
   retention_in_days = 7
 
   tags = local.tags
 }
 
-resource "aws_cloudwatch_log_group" "ecs_log_group_valkey" {
-  name              = "/ecs/valkey"
+resource "aws_cloudwatch_log_group" "ecs_log_group_rabbitmq" {
+  name              = "/ecs/rabbitmq"
   retention_in_days = 7
 
   tags = local.tags
@@ -170,8 +170,8 @@ resource "aws_service_discovery_private_dns_namespace" "main" {
 
 # --- Add Service Discovery to ECS Services ---
 
-resource "aws_service_discovery_service" "moai" {
-  name = "moai"
+resource "aws_service_discovery_service" "tomcat" {
+  name = "tomcat"
   dns_config {
     namespace_id = aws_service_discovery_private_dns_namespace.main.id
     dns_records {
@@ -186,8 +186,8 @@ resource "aws_service_discovery_service" "moai" {
   }
 }
 
-resource "aws_service_discovery_service" "aegis" {
-  name = "aegis"
+resource "aws_service_discovery_service" "memcached" {
+  name = "memcached"
   dns_config {
     namespace_id = aws_service_discovery_private_dns_namespace.main.id
     dns_records {
@@ -202,8 +202,8 @@ resource "aws_service_discovery_service" "aegis" {
   }
 }
 
-resource "aws_service_discovery_service" "valkey" {
-  name = "valkey"
+resource "aws_service_discovery_service" "rabbitmq" {
+  name = "rabbitmq"
   dns_config {
     namespace_id = aws_service_discovery_private_dns_namespace.main.id
     dns_records {
@@ -219,27 +219,37 @@ resource "aws_service_discovery_service" "valkey" {
 }
 
 
-# --- MOAI Service ---
+# --- tomcat Service ---
 
 locals {
-  moai_secret_map = {
-    RUST_LOG                              = "debug"
-
+  tomcat_secret_map = {
+    JDBC_DRIVER                  = "com.mysql.jdbc.Driver"
+    JDBC_URL                     = "jdbc:mysql://${var.rds_endpoint}:3306/accounts"
+    JDBC_USERNAME                = "${var.db_username}"
+    JDBC_PASSWORD                = "${var.db_password}"
+    MEMCACHED_ACTIVE_HOST        = "memcached.service.local"
+    MEMCACHED_ACTIVE_PORT        = 11211
+    MEMCACHED_STANDBY_HOST       = "memcached.service.local"
+    MEMCACHED_STANDBY_PORT       = 11212
+    RABBITMQ_ADDRESS             = "rabbitmq.service.local"
+    RABBITMQ_PORT                = 15672
+    RABBITMQ_USERNAME            = "guest"
+    RABBITMQ_PASSWORD            = "rabbitmq-passw0rd"
   }
 
-  moai_container_def = [
+  tomcat_container_def = [
     {
-      name  = "moai_auth_service"
-      image = "${aws_ecr_repository.moai_repo.repository_url}:${var.moai_image_tag}"
+      name  = "tomcat_auth_service"
+      image = "${aws_ecr_repository.tomcat_repo.repository_url}:${var.tomcat_image_tag}"
       portMappings = [
         {
-          containerPort = 8081
-          hostPort      = 8081
+          containerPort = 8080
+          hostPort      = 8080
           protocol      = "tcp"
         }
       ]
       environment = [
-        for key, value in local.moai_secret_map : {
+        for key, value in local.tomcat_secret_map : {
           name  = key
           value = value
         }
@@ -247,49 +257,49 @@ locals {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = "/ecs/moai"
+          awslogs-group         = "/ecs/tomcat"
           awslogs-region        = var.aws_region
           awslogs-stream-prefix = "ecs"
         }
       }
-      healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:8081/health || exit 1"]
-        interval    = 20
-        timeout     = 3
-        retries     = 3
-        startPeriod = 30
-      }
+      # healthCheck = {
+      #   command     = ["CMD-SHELL", "curl -f http://localhost:8081/health || exit 1"]
+      #   interval    = 20
+      #   timeout     = 3
+      #   retries     = 3
+      #   startPeriod = 30
+      # }
     }
   ]
 }
 
 
 
-# --- ECS Task Definition - MOAI ---
-resource "aws_ecs_task_definition" "moai_task" {
-  family                   = "moai"
+# --- ECS Task Definition - tomcat ---
+resource "aws_ecs_task_definition" "tomcat_task" {
+  family                   = "tomcat"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = "512"
   memory                   = "1024"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
-  container_definitions = jsonencode(local.moai_container_def)
+  container_definitions = jsonencode(local.tomcat_container_def)
 
   tags = merge(
     local.tags,
     {
-      Name = "moai"
+      Name = "tomcat"
     }
   )
 }
 
 
-# --- ECS Service MOAI---
-resource "aws_ecs_service" "moai_service" {
-  name            = "moai_ecs_service"
+# --- ECS Service tomcat---
+resource "aws_ecs_service" "tomcat_service" {
+  name            = "tomcat_ecs_service"
   cluster         = aws_ecs_cluster.ecs_cluster.id
-  task_definition = aws_ecs_task_definition.moai_task.arn
+  task_definition = aws_ecs_task_definition.tomcat_task.arn
   launch_type     = "FARGATE"
   desired_count   = 1
 
@@ -302,34 +312,34 @@ resource "aws_ecs_service" "moai_service" {
   tags = merge(
       local.tags,
       {
-        Name = "moai_ecs_service"
+        Name = "tomcat_ecs_service"
       }
   )
 }
 
 
 
-# --- AEGIS Service ---
+# --- memcached Service ---
 
 locals {
-  aegis_env_map = {
-    DB_NAME                        = "aegis"
+  memcached_env_map = {
+    DB_NAME                        = "memcached"
 
   }
 
-  aegis_container_def = [
+  memcached_container_def = [
     {
-      name  = "aegis_service"
-      image = "${aws_ecr_repository.aegis_repo.repository_url}:${var.aegis_image_tag}"
+      name  = "memcached_service"
+      image = "${aws_ecr_repository.memcached_repo.repository_url}:${var.memcached_image_tag}"
       portMappings = [
         {
-          containerPort = 3000
-          hostPort      = 3000
+          containerPort = 11211
+          hostPort      = 11211
           protocol      = "tcp"
         }
       ]
       environment = [
-        for key, value in local.aegis_env_map : {
+        for key, value in local.memcached_env_map : {
           name  = key
           value = value
         }
@@ -337,18 +347,18 @@ locals {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = "/ecs/aegis"
+          awslogs-group         = "/ecs/memcached"
           awslogs-region        = var.aws_region
           awslogs-stream-prefix = "ecs"
         }
       }
-      healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:3000/api/v1/health || exit 1"]
-        interval    = 30
-        timeout     = 5
-        retries     = 3
-        startPeriod = 10
-      }
+      # healthCheck = {
+      #   command     = ["CMD-SHELL", "curl -f http://localhost:3000/api/v1/health || exit 1"]
+      #   interval    = 30
+      #   timeout     = 5
+      #   retries     = 3
+      #   startPeriod = 10
+      # }
     }
   ]
 }
@@ -356,32 +366,32 @@ locals {
 
 
 
-# --- ECS Task Definition - AEGIS ---
-resource "aws_ecs_task_definition" "aegis_task" {
-  family                   = "aegis"
+# --- ECS Task Definition - memcached ---
+resource "aws_ecs_task_definition" "memcached_task" {
+  family                   = "memcached"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = "512"
   memory                   = "1024"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
-  container_definitions = jsonencode(local.aegis_container_def)
+  container_definitions = jsonencode(local.memcached_container_def)
 
   tags = merge(
     local.tags,
     {
-      Name = "aegis"
+      Name = "memcached"
     }
   )
 }
 
 
 
-# --- ECS Service AEGIS---
-resource "aws_ecs_service" "aegis_service" {
-  name            = "aegis_ecs_service"
+# --- ECS Service memcached---
+resource "aws_ecs_service" "memcached_service" {
+  name            = "memcached_ecs_service"
   cluster         = aws_ecs_cluster.ecs_cluster.id
-  task_definition = aws_ecs_task_definition.aegis_task.arn
+  task_definition = aws_ecs_task_definition.memcached_task.arn
   launch_type     = "FARGATE"
   desired_count   = 1
 
@@ -394,72 +404,73 @@ resource "aws_ecs_service" "aegis_service" {
   tags = merge(
       local.tags,
       {
-        Name = "aegis_ecs_service"
+        Name = "memcached_ecs_service"
       }
   )
 }
 
 # --- EFS ---
-resource "aws_efs_file_system" "valkey_efs" {
-  creation_token = "valkey_efs"
+# resource "aws_efs_file_system" "rabbitmq_efs" {
+#   creation_token = "rabbitmq_efs"
 
-  tags = merge(
-      local.tags,
-      {
-        Name = "valkey_efs"
-      }
-  )
-}
+#   tags = merge(
+#       local.tags,
+#       {
+#         Name = "rabbitmq_efs"
+#       }
+#   )
+# }
 
 
-resource "aws_efs_mount_target" "valkey_mount_targets" {
-  for_each = toset(var.private_subnet_ids)
+# resource "aws_efs_mount_target" "rabbitmq_mount_targets" {
+#   for_each = toset(var.private_subnet_ids)
 
-  file_system_id  = aws_efs_file_system.valkey_efs.id
-  subnet_id       = each.value
-  security_groups = [var.efs_sg_id]
-}
+#   file_system_id  = aws_efs_file_system.rabbitmq_efs.id
+#   subnet_id       = each.value
+#   security_groups = [var.efs_sg_id]
+# }
 
 
 
 # --- EFS Access Point ---
-resource "aws_efs_access_point" "valkey_access_point" {
-  file_system_id = aws_efs_file_system.valkey_efs.id
+# resource "aws_efs_access_point" "rabbitmq_access_point" {
+#   file_system_id = aws_efs_file_system.rabbitmq_efs.id
 
-  # posix_user {
-  #   gid = 1000
-  #   uid = 1000
-  # }
+#   # posix_user {
+#   #   gid = 1000
+#   #   uid = 1000
+#   # }
 
-  root_directory {
-    path = "/valkey-data"
-    creation_info {
-      owner_gid   = 0
-      owner_uid   = 0
-      permissions = "0777"
-    }
-  }
+#   root_directory {
+#     path = "/rabbitmq-data"
+#     creation_info {
+#       owner_gid   = 0
+#       owner_uid   = 0
+#       permissions = "0777"
+#     }
+#   }
 
-  tags = {
-    Name = "valkey_access_point"
-  }
-}
+#   tags = {
+#     Name = "rabbitmq_access_point"
+#   }
+# }
 
 
 
 locals {
-  valkey_env_map = {
-    VALKEY_PASSWORD = "valkey-passw0rd"
+  rabbitmq_env_map = {
+    RABBITMQ_DEFAULT_USER = "guest"
+    RABBITMQ_DEFAULT_PASS = "rabbitmq-passw0rd"
   }
 
-  valkey_container_def = [
+  rabbitmq_container_def = [
     {
-      name  = "valkey-service"
-      image = "${aws_ecr_repository.valkey_repo.repository_url}:${var.valkey_image_tag}"
+      name  = "rabbitmq-service"
+      image = "${aws_ecr_repository.rabbitmq_repo.repository_url}:${var.rabbitmq_image_tag}"
       portMappings = [
         {
-          containerPort = 6379
-          hostPort      = 6379
+          containerPort = 15672
+          hostPort      = 15672
           protocol      = "tcp"
         }
       ]
@@ -468,38 +479,38 @@ locals {
         user = "0"
       }
       environment = [
-        for key, value in local.valkey_env_map : {
+        for key, value in local.rabbitmq_env_map : {
           name  = key
           value = value
         }
       ]
-      command = [
-        "--requirepass", local.valkey_env_map["VALKEY_PASSWORD"],
-        "--dir", "/data",
-        "--dbfilename", "dump.rdb"
-      ]
-      mountPoints = [
-        {
-          containerPath = "/data"
-          sourceVolume  = "valkey-data"
-          readOnly      = false
-        }
-      ]
+      # command = [
+      #   "--requirepass", local.rabbitmq_env_map["rabbitmq_PASSWORD"],
+      #   "--dir", "/data",
+      #   "--dbfilename", "dump.rdb"
+      # ]
+      # mountPoints = [
+      #   {
+      #     containerPath = "/data"
+      #     sourceVolume  = "rabbitmq-data"
+      #     readOnly      = false
+      #   }
+      # ]
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = "/ecs/valkey"
+          awslogs-group         = "/ecs/rabbitmq"
           awslogs-region        = var.aws_region
           awslogs-stream-prefix = "ecs"
         }
       }
-      healthCheck = {
-        command     = ["CMD-SHELL", "valkey-cli -a $VALKEY_PASSWORD PING"]
-        interval    = 10
-        timeout     = 5
-        retries     = 6
-        startPeriod = 15
-      }
+      # healthCheck = {
+      #   command     = ["CMD-SHELL", "rabbitmq-cli -a $rabbitmq_PASSWORD PING"]
+      #   interval    = 10
+      #   timeout     = 5
+      #   retries     = 6
+      #   startPeriod = 15
+      # }
     }
   ]
 }
@@ -507,9 +518,9 @@ locals {
 
 
 
-# --- ECS Task Definition for Valkey ---
-resource "aws_ecs_task_definition" "valkey_task" {
-  family                   = "valkey"
+# --- ECS Task Definition for rabbitmq ---
+resource "aws_ecs_task_definition" "rabbitmq_task" {
+  family                   = "rabbitmq"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = "256"
@@ -517,31 +528,31 @@ resource "aws_ecs_task_definition" "valkey_task" {
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
 
-  volume {
-    name = "valkey-data"
-    efs_volume_configuration {
-      file_system_id          = aws_efs_file_system.valkey_efs.id
-      transit_encryption      = "ENABLED"
-      authorization_config {
-        access_point_id = aws_efs_access_point.valkey_access_point.id
-        iam             = "ENABLED"
-      }
-    }
-  }
+  # volume {
+  #   name = "rabbitmq-data"
+  #   efs_volume_configuration {
+  #     file_system_id          = aws_efs_file_system.rabbitmq_efs.id
+  #     transit_encryption      = "ENABLED"
+  #     authorization_config {
+  #       access_point_id = aws_efs_access_point.rabbitmq_access_point.id
+  #       iam             = "ENABLED"
+  #     }
+  #   }
+  # }
 
-  container_definitions = jsonencode(local.valkey_container_def)
+  container_definitions = jsonencode(local.rabbitmq_container_def)
 
   tags = {
-    Name = "valkey-task"
+    Name = "rabbitmq-task"
   }
 }
 
 
-# --- ECS Service for Valkey ---
-resource "aws_ecs_service" "valkey_service" {
-  name            = "valkey_ecs_service"
+# --- ECS Service for rabbitmq ---
+resource "aws_ecs_service" "rabbitmq_service" {
+  name            = "rabbitmq_ecs_service"
   cluster         = aws_ecs_cluster.ecs_cluster.id
-  task_definition = aws_ecs_task_definition.valkey_task.arn
+  task_definition = aws_ecs_task_definition.rabbitmq_task.arn
   launch_type     = "FARGATE"
   desired_count   = 1
 
@@ -552,7 +563,7 @@ resource "aws_ecs_service" "valkey_service" {
   }
 
   tags = {
-    Name = "valkey_ecs_service"
+    Name = "rabbitmq_ecs_service"
   }
 }
 
