@@ -272,13 +272,15 @@ resource "aws_lb_target_group" "tomcat_tg" {
   vpc_id      = var.vpc2_id
 
   health_check {
-    path                = "/login"
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
-    matcher             = "200-399"
-  }
+  path                = "/login"
+  protocol            = "HTTP"
+  matcher             = "200-399"
+  interval            = 30
+  timeout             = 5
+  healthy_threshold   = 2
+  unhealthy_threshold = 2
+  port                = "8080"
+}
 
   tags = merge(local.tags, { Name = "tomcat-tg" })
 }
