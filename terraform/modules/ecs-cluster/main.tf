@@ -11,9 +11,9 @@ locals {
 resource "aws_ecr_repository" "moai_repo" {
   name = var.ecr_moai_repo_name
 
-  lifecycle {
-    prevent_destroy = true
-  }
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 
   tags = merge(
       local.tags,
