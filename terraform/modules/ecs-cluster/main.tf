@@ -309,6 +309,11 @@ resource "aws_ecs_service" "tomcat_service" {
     assign_public_ip = false
   }
 
+  service_registries {
+    registry_arn = aws_service_discovery_service.tomcat.arn
+  }
+
+
   tags = merge(
       local.tags,
       {
@@ -400,6 +405,11 @@ resource "aws_ecs_service" "memcached_service" {
     security_groups  = [var.app_security_group_id]
     assign_public_ip = false
   }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.memcached.arn
+  }
+
 
   tags = merge(
       local.tags,
@@ -560,6 +570,10 @@ resource "aws_ecs_service" "rabbitmq_service" {
     subnets          = var.private_subnet_ids
     security_groups  = [var.app_security_group_id]
     assign_public_ip = false
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.rabbitmq.arn
   }
 
   tags = {
