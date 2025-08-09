@@ -77,6 +77,35 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_attach" {
 }
 
 
+resource "aws_iam_role_policy" "ecs_exec_policy" {
+  name = "ecs-exec-policy"
+  role = aws_iam_role.ecs_task_execution_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = [
+          "ssmmessages:CreateControlChannel",
+          "ssmmessages:CreateDataChannel",
+          "ssmmessages:OpenControlChannel",
+          "ssmmessages:OpenDataChannel"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = [
+          "ecs:ExecuteCommand"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+
 # resource "aws_iam_role_policy" "rabbitmq_task_policy" {
 #   name = "rabbitmq-efs-access"
 #   role = aws_iam_role.ecs_task_execution_role.name
@@ -336,6 +365,7 @@ resource "aws_ecs_task_definition" "tomcat_task" {
   cpu                      = "512"
   memory                   = "1024"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode(local.tomcat_container_def)
 
@@ -355,6 +385,7 @@ resource "aws_ecs_service" "tomcat_service" {
   task_definition = aws_ecs_task_definition.tomcat_task.arn
   launch_type     = "FARGATE"
   desired_count   = 1
+  enable_execute_command  = true
 
   network_configuration {
     subnets          = var.private_subnet_ids
@@ -440,6 +471,7 @@ resource "aws_ecs_task_definition" "memcached_task" {
   cpu                      = "512"
   memory                   = "1024"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode(local.memcached_container_def)
 
@@ -460,6 +492,7 @@ resource "aws_ecs_service" "memcached_service" {
   task_definition = aws_ecs_task_definition.memcached_task.arn
   launch_type     = "FARGATE"
   desired_count   = 1
+  enable_execute_command  = true
 
   network_configuration {
     subnets          = var.private_subnet_ids
@@ -626,6 +659,7 @@ resource "aws_ecs_service" "rabbitmq_service" {
   task_definition = aws_ecs_task_definition.rabbitmq_task.arn
   launch_type     = "FARGATE"
   desired_count   = 1
+  enable_execute_command  = true
 
   network_configuration {
     subnets          = var.private_subnet_ids
