@@ -247,3 +247,21 @@ variable "db_password" {
   description = "Password for RDS database"
   sensitive   = true
 }
+
+variable "db_mode" {
+  description = "aurora or mysql"
+  type        = string
+  default     = "aurora"
+}
+
+variable "enable_snapshot" {
+  description = "Enable snapshot and cross-region copy"
+  type        = bool
+  default     = true
+}
+
+variable "dr_region" {
+  description = "Region để copy snapshot"
+  type        = string
+  default     = "ap-southeast-2"
+}

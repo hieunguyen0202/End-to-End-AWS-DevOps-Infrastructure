@@ -56,3 +56,6 @@ db_identifier               = "aj3-aws-infra-rds-mysql-db-dev"
 db_name                     = "accounts"
 db_username                 = "admin"
 db_password                 = "StrongPassw0rd"
+db_mode                     = "aurora"
+enable_snapshot             = true
+dr_region                   = "ap-southeast-2"

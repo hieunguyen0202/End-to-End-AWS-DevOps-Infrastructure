@@ -1,0 +1,104 @@
+{
+    "DBInstance": {
+        "DBInstanceIdentifier": "aurora-reader",
+        "DBInstanceClass": "db.t3.medium",
+        "Engine": "aurora-mysql",
+        "DBInstanceStatus": "deleting",
+        "MasterUsername": "admin",
+        "DBName": "accounts",
+        "Endpoint": {
+            "Address": "aurora-reader.clyaecec83ea.ap-southeast-1.rds.amazonaws.com",
+            "Port": 3306,
+            "HostedZoneId": "Z2G0U3KFCY8NZ5"
+        },
+        "AllocatedStorage": 1,
+        "InstanceCreateTime": "2025-08-10T05:21:30.205000+00:00",
+        "PreferredBackupWindow": "02:00-03:00",
+        "BackupRetentionPeriod": 7,
+        "DBSecurityGroups": [],
+        "VpcSecurityGroups": [
+            {
+                "VpcSecurityGroupId": "sg-072b503f47ad8f724",
+                "Status": "active"
+            }
+        ],
+        "DBParameterGroups": [
+            {
+                "DBParameterGroupName": "default.aurora-mysql8.0",
+                "ParameterApplyStatus": "in-sync"
+            }
+        ],
+        "AvailabilityZone": "ap-southeast-1a",
+        "DBSubnetGroup": {
+            "DBSubnetGroupName": "aj3-aws-infra-rds-sub-grp-dev",
+            "DBSubnetGroupDescription": "Managed by Terraform",
+            "VpcId": "vpc-0d0f6c006aa3671d7",
+            "SubnetGroupStatus": "Complete",
+            "Subnets": [
+                {
+                    "SubnetIdentifier": "subnet-0e61ae9a719860483",
+                    "SubnetAvailabilityZone": {
+                        "Name": "ap-southeast-1c"
+                    },
+                    "SubnetOutpost": {},
+                    "SubnetStatus": "Active"
+                },
+                {
+                    "SubnetIdentifier": "subnet-0373abfb1131738d4",
+                    "SubnetAvailabilityZone": {
+                        "Name": "ap-southeast-1a"
+                    },
+                    "SubnetOutpost": {},
+                    "SubnetStatus": "Active"
+                }
+            ]
+        },
+        "PreferredMaintenanceWindow": "mon:14:12-mon:14:42",
+        "PendingModifiedValues": {},
+        "MultiAZ": false,
+        "EngineVersion": "8.0.mysql_aurora.3.05.2",
+        "AutoMinorVersionUpgrade": true,
+        "ReadReplicaDBInstanceIdentifiers": [],
+        "LicenseModel": "general-public-license",
+        "OptionGroupMemberships": [
+            {
+                "OptionGroupName": "default:aurora-mysql-8-0",
+                "Status": "in-sync"
+            }
+        ],
+        "PubliclyAccessible": false,
+        "StorageType": "aurora",
+        "DbInstancePort": 0,
+        "DBClusterIdentifier": "aurora-cluster",
+        "StorageEncrypted": true,
+        "KmsKeyId": "arn:aws:kms:ap-southeast-1:143735903781:key/2d55cf1f-8df2-42a8-a300-80f0c0ca8e0d",
+        "DbiResourceId": "db-LVHVGZO3TFDY5BG3I6U5LA7AFA",
+        "CACertificateIdentifier": "",
+        "DomainMemberships": [],
+        "CopyTagsToSnapshot": false,
+        "MonitoringInterval": 0,
+        "PromotionTier": 0,
+        "DBInstanceArn": "arn:aws:rds:ap-southeast-1:143735903781:db:aurora-reader",
+        "IAMDatabaseAuthenticationEnabled": false,
+        "DatabaseInsightsMode": "standard",
+        "PerformanceInsightsEnabled": false,
+        "DeletionProtection": false,
+        "AssociatedRoles": [],
+        "TagList": [
+            {
+                "Key": "project",
+                "Value": "aj3-aws-infra-dev-project"
+            },
+            {
+                "Key": "Name",
+                "Value": "aurora-reader"
+            }
+        ],
+        "CustomerOwnedIpEnabled": false,
+        "BackupTarget": "region",
+        "NetworkType": "IPV4",
+        "StorageThroughput": 0,
+        "DedicatedLogVolume": false,
+        "EngineLifecycleSupport": "open-source-rds-extended-support"
+    }
+}

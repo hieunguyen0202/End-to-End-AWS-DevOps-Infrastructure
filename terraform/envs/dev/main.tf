@@ -86,12 +86,13 @@ module "ecs-cluster" {
   private_subnet_ids            = module.network.aws_app_subnet_private_ids
   app_security_group_id         = module.security.app_security_group_id
   aws_ecs_service               = var.aws_ecs_service
+  db_mode                       = var.db_mode
   project                       = var.project
   aws_region                    = var.region
   vpc2_id                       = module.network.vpc2_id
   db_username                   = var.db_username
   db_password                   = var.db_password
-  rds_endpoint                  = module.database.rds_endpoint
+  rds_endpoint                  = module.database.db_endpoint
   alb_security_group_id         = module.security.alb_security_group_id
   public_subnet_ids             = module.network.aws_subnet_public_ids
 }
@@ -109,4 +110,7 @@ module "database" {
   availability_zones            = var.availability_zones
   subnet_ids                    = module.network.aws_app_subnet_private_ids
   project                       = var.project
+  db_mode                       = var.db_mode
+  enable_snapshot               = var.enable_snapshot
+  dr_region                     = var.dr_region
 }

@@ -309,6 +309,11 @@ locals {
   tomcat_secret_map = {
     JDBC_DRIVER                  = "com.mysql.jdbc.Driver"
     JDBC_URL                     = "jdbc:mysql://${var.rds_endpoint}/accounts"
+    JDBC_URL = var.db_mode == "aurora" ? (
+      "jdbc:mysql://${var.rds_endpoint}:3306/accounts"
+    ) : (
+      "jdbc:mysql://${var.rds_endpoint}/accounts"
+    )
     JDBC_USERNAME                = "${var.db_username}"
     JDBC_PASSWORD                = "${var.db_password}"
     MEMCACHED_ACTIVE_HOST        = "memcached.service.local"

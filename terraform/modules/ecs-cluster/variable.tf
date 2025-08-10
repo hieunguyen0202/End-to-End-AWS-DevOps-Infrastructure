@@ -45,6 +45,13 @@ variable "rds_endpoint" {
   description = "RDS database endpoint"
 }
 
+variable "db_mode" {
+  description = "aurora or mysql"
+  type        = string
+  default     = "aurora"
+}
+
+
 variable "tomcat_image_tag" {
   type        = string
   description = "ECR image tag to deploy"

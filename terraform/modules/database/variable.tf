@@ -42,3 +42,21 @@ variable "security_group_id" {
   type        = string
   description = "Existing security group ID for the RDS instance"
 }
+
+variable "db_mode" {
+  description = "aurora or mysql"
+  type        = string
+  default     = "aurora"
+}
+
+variable "enable_snapshot" {
+  description = "Enable snapshot and cross-region copy"
+  type        = bool
+  default     = true
+}
+
+variable "dr_region" {
+  description = "Region để copy snapshot"
+  type        = string
+  default     = "ap-southeast-2"
+}
