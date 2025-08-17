@@ -107,15 +107,15 @@ terraform {
 
     ```
     - name: Terraform Plan
-  id: plan
-  run: |
-    terraform plan -input=false -no-color > tfplan.txt
+      id: plan
+      run: |
+        terraform plan -input=false -no-color > tfplan.txt
 
-- name: Upload Plan to PR Comment
-  uses: juliangruber/terraform-plan-commenter@v1.2.0
-  with:
-    plan: tfplan.txt
-    github_token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload Plan to PR Comment
+      uses: juliangruber/terraform-plan-commenter@v1.2.0
+      with:
+        plan: tfplan.txt
+        github_token: ${{ secrets.GITHUB_TOKEN }}
     ```
 
 - Reviewer approve → Merge vào branch dev
