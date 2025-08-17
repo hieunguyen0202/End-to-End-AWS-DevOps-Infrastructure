@@ -18,13 +18,12 @@
 
 - AWS Landing Zone
 
-
-
+![alt text](EndToEnd-AWSLandingZone.drawio.png)
 
 
 - Architecture Diagram: (AWS-JAVA-3TIER)
 
-![alt text](End-to-End-AWS-DevOps-Infrastructure.drawio.svg)
+![alt text](<End-to-End.drawio (1).svg>)
 
 ## II. High-Level Architecture
 
