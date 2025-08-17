@@ -15,6 +15,13 @@
 
 - Tech Stack: GitHub Actions, Terraform, Docker, ECS, ECR, SonarCloud, JFrog, RDS (MySQL), Amazon MQ, ElastiCache (Memcached), CloudWatch, CloudFront, ALB, Nginx, Tomcat, Maven.
 
+
+- AWS Landing Zone
+
+
+
+
+
 - Architecture Diagram: (AWS-JAVA-3TIER)
 
 ![alt text](End-to-End-AWS-DevOps-Infrastructure.drawio.svg)
@@ -203,22 +210,75 @@ resource "aws_security_group" "db_sg" {
   - Freeable memory, CPU, storage thresholds
 
 ```
-resource "aws_cloudwatch_metric_alarm" "rds_high_cpu" {
-  alarm_name          = "rds-high-cpu"
+resource "aws_cloudwatch_metric_alarm" "aurora_cpu_high" {
+  count               = var.db_mode == "aurora" ? 1 : 0
+  alarm_name          = "aurora-cpu-high"
   comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 2
+  evaluation_periods  = 3
   metric_name         = "CPUUtilization"
   namespace           = "AWS/RDS"
-  period              = 60
+  period              = 300
   statistic           = "Average"
   threshold           = 80
-  alarm_actions       = [aws_sns_topic.alerts.arn]
+  alarm_description   = "Alarm when Aurora CPU exceeds 80%"
   dimensions = {
-    DBInstanceIdentifier = aws_db_instance.primary.id
+    DBClusterIdentifier = aws_rds_cluster.aurora[0].id
   }
+  alarm_actions       = [var.sns_topic_arn]  # Send notifications
 }
 
+resource "aws_cloudwatch_metric_alarm" "aurora_replica_lag" {
+  count               = var.db_mode == "aurora" ? 1 : 0
+  alarm_name          = "aurora-replica-lag-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 3
+  metric_name         = "AuroraReplicaLag"
+  namespace           = "AWS/RDS"
+  period              = 300
+  statistic           = "Average"
+  threshold           = 60 # seconds
+  alarm_description   = "Alarm when Aurora Replica lag exceeds 60 seconds"
+  dimensions = {
+    DBClusterIdentifier = aws_rds_cluster.aurora[0].id
+  }
+  alarm_actions       = [var.sns_topic_arn]
+}
+
+
 ```
+
+- CloudWatch Metrics for RDS/Aurora
+
+AWS RDS/Aurora automatically sends key performance and health metrics to CloudWatch, including:
+
+| Metric               | Description                      | Why monitor it?                   |
+|----------------------|---------------------------------|---------------------------------|
+| CPUUtilization       | % of CPU used                   | Detect high load / bottlenecks  |
+| FreeableMemory       | Available RAM (bytes)           | Prevent out-of-memory errors    |
+| DatabaseConnections  | Number of active DB connections | Avoid connection saturation     |
+| FreeStorageSpace     | Free disk space available       | Avoid running out of disk       |
+| ReadIOPS / WriteIOPS | I/O operations per second       | Check for unusual or high I/O load |
+| ReadLatency / WriteLatency | Time taken for read/write operations | Detect slow queries or storage issues |
+| ReplicaLag           | Lag time of replicas (Aurora only) | Ensure replicas are up-to-date |
+| DiskQueueDepth       | Number of pending IO requests   | Identify storage bottlenecks    |
+| SwapUsage            | Swap space used                 | Can indicate memory pressure    |
+
+
+- In a real project, how would you apply CloudWatch for RDS/Aurora?
+  - Baseline Metrics & Thresholds: Understand your workload baseline (normal CPU, memory, IOPS). Set thresholds slightly above baseline.
+
+  - Create Alarms for Key Metrics: CPU, storage space, connections, replica lag, latency.
+
+  - Setup Notifications: Use SNS to send alerts to DevOps team via email, Slack, PagerDuty.
+
+  - Automated Actions (optional): Use CloudWatch Event Rules + Lambda to automate scale up/down, or perform remediation.
+
+  - Dashboards: Create CloudWatch Dashboards to visualize trends and performance in one place.
+
+  - Logs: Enable enhanced monitoring & export RDS logs (slow query logs, error logs) to CloudWatch Logs for deeper insights.
+
+  - Integrate with CI/CD: Use alarms as gates to halt deployments if DB performance is degraded.
+
 
 
 ## IV. Module Documentation
