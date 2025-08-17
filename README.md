@@ -128,90 +128,37 @@ terraform {
 
 
 
-### 🔁 Deployment Strategy
+### 🔄 Blue-Green Deployment Flow (ECS + Jenkins + Terraform)
 
-#Tạo một tag và push lên github repository của bạn. Vd: v1.0.0
-git tag -a v1.0.0 -m "Release v1.0.0"
-git push origin v1.0.0
-#Chạy job [BlueGreen-Job1-Build] với tham số version = v1.0.0
-#Kiểm tra job chạy thành công và image đã được push lên ECR repository.
+#### 1. Tag & Build:
 
-#=========Step 3: Sử dụng Terraform để deploy ra stack
-cd terraform/envs/dev/
-#Chỉnh sửa file sau: senvs/dev/terraform.tfvars
-#  - Chỉnh sửa thành url ECR repository của bạn ví dụ:
-     430950558682.dkr.ecr.ap-southeast-1.amazonaws.com/nodejs-random-color:v1.0.0
+Tag source code with a version (e.g., v1.0.0).
 
-#Chạy các lệnh sau:
+Jenkins Build Job builds Docker image and pushes image to ECR with that version tag.
 
-```
-terraform init
-terraform plan --var-file "terraform.tfvars"
-terraform apply --var-file "terraform.tfvars"
+#### 2. Deploy New Version (Terraform):
 
-```
+Update Terraform variables to use the new ECR image version.
 
-#Kiểm tra resource được tạo ra thành công trên AWS.
-#Lưu ý, terraform stack sẽ tạo ra 2 cụm ECS Cluster và 2 Target Group, 1 ALB. Trên ALB có 2 listener nên cần kiểm tra cả hai.
+Terraform deploys ECS tasks to both green and blue clusters via separate target groups attached to the same ALB.
 
-#Truy cập ALB bằng port 80, kiểm tra trang index hiển thị đúng version v1.0.0 (2 màu khác nhau).
-#Truy cập ALB bằng port 81, kiểm tra trang index hiển thị đúng version v1.0.0 (2 màu khác nhau).
+Application is reachable on two different ALB listeners (e.g., port 80 → blue, port 81 → green).
 
-#==========Step 4: Tạo Job Deploy:
+#### 3. Deploy via Jenkins Job 2 (ECS Deploy):
 
-#Tạo một Job Jenkins mới, đặt tên là BlueGreen-Job2-Deploy-ECS.
+Jenkins deploy job triggers ECS service update to either blue or green cluster (e.g., deploy new version to green).
 
-#Nhập tham số cho job: VERSION (String), default value: latest
-#Nhập tham số cho job: CLUSTER_NAME (Choice), Cho chọn 2 giá trị là: udemy-devops-cluster-blue, udemy-devops-cluster-green
-#Sử dụng code Pipeline trong file: blue-green_job2-deploy-ecs.groovy
-# Sửa ECR repository url của bạn.
-#Save job lại.
+Validate new version through separate ALB listener before switching traffic.
 
-#Chạy thử và kiểm tra job deploy.
-#Chỉnh sửa code html của trang index, thêm đoạn text "v1.0.1".
+#### 4. Switch Traffic:
 
-```
-git add .
-git commit -m "Update version 1.0.1"
-git push origin master
-#Tạo một tag và push lên github repository của bạn. Vd: v1.0.1
-git tag -a v1.0.1 -m "Release v1.0.1"
-git push origin v1.0.1
+Jenkins Switch Traffic Job updates ALB listener rules/weights to direct production traffic from blue target group to green.
 
-```
+Zero downtime cutover once verification is complete.
 
-#Chạy job [BlueGreen-Job1-Build] với tham số version = v1.0.1
-#Kiểm tra job chạy thành công và image đã được push lên ECR repository.
+#### 5. Cleanup:
 
-#Chạy job [BlueGreen-Job2-Deploy-ECS] với tham số version = v1.0.1, cluster_name = udemy-devops-cluster-green
-#Truy cập ALB và kiểm tra trang index hiển thị đúng version trên cả 2 listener của ALB.
-#<ALB DNS>:/80 =>kết quả ra version 1.0.0
-#<ALB DNS>:/81 =>kết quả ra version 1.0.1
-
-
-#==========Step 5: Tạo Job Switch traffic:
-#Add Policy cho IAM Role của Jenkins để có quyền switch traffic giữa 2 Target Group.
-#Policy name: ElasticLoadBalancingFullAccess
-
-#Tạo một Job Jenkins mới, đặt tên là BlueGreen-Job3-Switch-Traffic.
-#Sử dụng code Pipeline trong file: blue-green_job3-switch-traffic.groovy
-#  - Sửa thông tin ALB_ARN thành ARN của ALB của bạn.
-#Save job lại.
-
-#Chạy job [BlueGreen-Job3-Switch-Traffic] và kiểm tra trang index hiển thị đúng version trên cả 2 listener của ALB.
-#<ALB DNS>:/80 =>kết quả ra version 1.0.1
-#<ALB DNS>:/81 =>kết quả ra version 1.0.0
-
-
-#==========Step 6: Tạo Job Clear resource:
-#Tạo một Job Jenkins mới, đặt tên là BlueGreen-Job4-Clear-Resource.
-#Nhập tham số cho job: CLUSTER_NAME (Choice), Cho chọn 2 giá trị là: udemy-devops-cluster-blue, udemy-devops-cluster-green
-#Sử dụng code Pipeline trong file: blue-green_job4-clear-resource.groovy
-#Save job lại.
-
-#kiểm tra xem code trên cluster blue hay green đang cũ hơn?
-#Chạy job [BlueGreen-Job4-Clear-Resource] với tham số cluster_name = <cluster name xác nhận ở bước trên>
-#Kiểm tra trên AWS console xem task đã bị stop hết chưa?
+Remove old tasks / cluster (blue or green) via Jenkins Clear Resource Job to free up resources and keep only the active environment.
 
 
 
