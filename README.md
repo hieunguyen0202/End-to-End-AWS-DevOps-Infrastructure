@@ -191,7 +191,7 @@ User
   ↓
 CloudFront
   ├── "/"               → S3 static frontend (with OAC / bucket policy restrict to CF)
-  └── "/api/*"          → Application Load Balancer (public)
+  └── "/api/*"          → ALB (my-alb-1234567890.ap-southeast-1.elb.amazonaws.com)
                           ├── /api/rdm   → ECS Service rdm
                           ├── /api/aegis → ECS Service aegis
                           └── /api/moai  → ECS Service moai
@@ -248,17 +248,283 @@ jobs:
   - /api/moai → target group Moai
 
 - Mỗi ECS Service chạy trong private subnet, dùng riêng security group + IAM Task Role.
-- Ở alb module:
 
 ```
-resource "aws_lb_listener_rule" "rdm" {
-  listener_arn = aws_lb_listener.http.arn
-  priority     = 10
-  action { ... target_group_arn = aws_lb_target_group.rdm.arn }
-  condition { path_pattern { values = ["/api/rdm*"] } }
+User
+  ↳ ALB
+      - Port 80:
+         /rdm   -> target_group rdm_blue
+         /aegis -> target_group aegis_blue
+      - Port 81:
+         /rdm   -> target_group rdm_green
+         /aegis -> target_group aegis_green
+
+
+```
+
+- Mỗi ECS Service gồm 2 thực thể: rdm-blue, rdm-green, aegis-blue, aegis-green.
+
+
+```
+###############################
+# Variables (giả sử đã define bên ngoài)
+###############################
+variable "cluster_name" {}
+variable "task_execution_role_arn" {}
+variable "task_role_arn" {}
+variable "image_tag_rdm" {}
+variable "image_tag_aegis" {}
+variable "vpc_id" {}
+variable "subnets" { type = list(string) }
+variable "ecs_security_groups" { type = list(string) }
+
+###############################
+# ALB
+###############################
+resource "aws_lb" "app_alb" {
+  name               = "api-alb"
+  load_balancer_type = "application"
+  subnets            = var.subnets
+  security_groups    = var.ecs_security_groups
 }
 
+# Listener 80 = BLUE
+resource "aws_lb_listener" "listener_blue" {
+  load_balancer_arn = aws_lb.app_alb.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Default ALB Response"
+      status_code  = "200"
+    }
+  }
+}
+
+# Listener 81 = GREEN
+resource "aws_lb_listener" "listener_green" {
+  load_balancer_arn = aws_lb.app_alb.arn
+  port              = "81"
+  protocol          = "HTTP"
+  default_action {
+    type             = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Green Default"
+      status_code  = "200"
+    }
+  }
+}
+
+###############################
+# Target Groups (Blue & Green for rdm + aegis)
+###############################
+resource "aws_lb_target_group" "rdm_blue_tg" {
+  name     = "tg-rdm-blue"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = var.vpc_id
+  target_type = "ip"
+}
+
+resource "aws_lb_target_group" "rdm_green_tg" {
+  name     = "tg-rdm-green"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = var.vpc_id
+  target_type = "ip"
+}
+
+resource "aws_lb_target_group" "aegis_blue_tg" {
+  name     = "tg-aegis-blue"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = var.vpc_id
+  target_type = "ip"
+}
+
+resource "aws_lb_target_group" "aegis_green_tg" {
+  name     = "tg-aegis-green"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = var.vpc_id
+  target_type = "ip"
+}
+
+###############################
+# Listener Rules
+###############################
+# BLUE listener rules
+resource "aws_lb_listener_rule" "rdm_rule_blue" {
+  listener_arn = aws_lb_listener.listener_blue.arn
+  priority     = 10
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.rdm_blue_tg.arn
+  }
+  condition {
+    path_pattern { values = ["/rdm*"] }
+  }
+}
+
+resource "aws_lb_listener_rule" "aegis_rule_blue" {
+  listener_arn = aws_lb_listener.listener_blue.arn
+  priority     = 20
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.aegis_blue_tg.arn
+  }
+  condition {
+    path_pattern { values = ["/aegis*"] }
+  }
+}
+
+# GREEN listener rules
+resource "aws_lb_listener_rule" "rdm_rule_green" {
+  listener_arn = aws_lb_listener.listener_green.arn
+  priority     = 10
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.rdm_green_tg.arn
+  }
+  condition {
+    path_pattern { values = ["/rdm*"] }
+  }
+}
+
+resource "aws_lb_listener_rule" "aegis_rule_green" {
+  listener_arn = aws_lb_listener.listener_green.arn
+  priority     = 20
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.aegis_green_tg.arn
+  }
+  condition {
+    path_pattern { values = ["/aegis*"] }
+  }
+}
+
+###############################
+# Task Definitions
+###############################
+resource "aws_ecs_task_definition" "rdm_task" {
+  family                   = "rdm"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = var.task_execution_role_arn
+  task_role_arn            = var.task_role_arn
+
+  container_definitions = jsonencode([{
+    name  = "rdm"
+    image = "430950558682.dkr.ecr.ap-southeast-1.amazonaws.com/rdm:${var.image_tag_rdm}"
+    portMappings = [{ containerPort = 8080 }]
+    essential = true
+  }])
+}
+
+resource "aws_ecs_task_definition" "aegis_task" {
+  family                   = "aegis"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = var.task_execution_role_arn
+  task_role_arn            = var.task_role_arn
+
+  container_definitions = jsonencode([{
+    name  = "aegis"
+    image = "430950558682.dkr.ecr.ap-southeast-1.amazonaws.com/aegis:${var.image_tag_aegis}"
+    portMappings = [{ containerPort = 8080 }]
+    essential = true
+  }])
+}
+
+###############################
+# ECS Services (Blue & Green) for both Services
+###############################
+# RDM Services
+resource "aws_ecs_service" "rdm_blue_service" {
+  name            = "rdm-blue"
+  cluster         = var.cluster_name
+  task_definition = aws_ecs_task_definition.rdm_task.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+  network_configuration {
+    subnets         = var.subnets
+    security_groups = var.ecs_security_groups
+    assign_public_ip = false
+  }
+  load_balancer {
+    target_group_arn = aws_lb_target_group.rdm_blue_tg.arn
+    container_name   = "rdm"
+    container_port   = 8080
+  }
+}
+
+resource "aws_ecs_service" "rdm_green_service" {
+  name            = "rdm-green"
+  cluster         = var.cluster_name
+  task_definition = aws_ecs_task_definition.rdm_task.arn
+  desired_count   = 0
+  launch_type     = "FARGATE"
+  network_configuration {
+    subnets         = var.subnets
+    security_groups = var.ecs_security_groups
+    assign_public_ip = false
+  }
+  load_balancer {
+    target_group_arn = aws_lb_target_group.rdm_green_tg.arn
+    container_name   = "rdm"
+    container_port   = 8080
+  }
+}
+
+# AEGIS Services
+resource "aws_ecs_service" "aegis_blue_service" {
+  name            = "aegis-blue"
+  cluster         = var.cluster_name
+  task_definition = aws_ecs_task_definition.aegis_task.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+  network_configuration {
+    subnets         = var.subnets
+    security_groups = var.ecs_security_groups
+    assign_public_ip = false
+  }
+  load_balancer {
+    target_group_arn = aws_lb_target_group.aegis_blue_tg.arn
+    container_name   = "aegis"
+    container_port   = 8080
+  }
+}
+
+resource "aws_ecs_service" "aegis_green_service" {
+  name            = "aegis-green"
+  cluster         = var.cluster_name
+  task_definition = aws_ecs_task_definition.aegis_task.arn
+  desired_count   = 0
+  launch_type     = "FARGATE"
+  network_configuration {
+    subnets         = var.subnets
+    security_groups = var.ecs_security_groups
+    assign_public_ip = false
+  }
+  load_balancer {
+    target_group_arn = aws_lb_target_group.aegis_green_tg.arn
+    container_name   = "aegis"
+    container_port   = 8080
+  }
+}
+
+
 ```
+
+
 
 #### 🧱 Blue-Green per Microservice – Architectural Upgrade
 
