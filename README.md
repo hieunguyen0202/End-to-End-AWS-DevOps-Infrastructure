@@ -163,7 +163,6 @@ Remove old tasks / cluster (blue or green) via Jenkins Clear Resource Job to fre
 
 
 
-
 ### 🌐 Full Flow Overview:
 
 
@@ -183,6 +182,158 @@ ECS Service (Backend API in private subnet)
 RDS (private DB subnet, port 3306)
 
 ```
+
+### 🌐 CloudFront + S3 + ALB:
+
+
+```
+User
+  ↓
+CloudFront
+  ├── "/"               → S3 static frontend (with OAC / bucket policy restrict to CF)
+  └── "/api/*"          → Application Load Balancer (public)
+                          ├── /api/rdm   → ECS Service rdm
+                          ├── /api/aegis → ECS Service aegis
+                          └── /api/moai  → ECS Service moai
+
+```
+
+
+#### 🧱 Architecture:
+
+FE (React/Vue/NextJS build files) được build và upload lên S3.
+
+CloudFront sử dụng Origin Access Control (OAC) để truy cập S3.
+
+S3 bucket policy chỉ cho phép access từ CloudFront OAC, deny public.
+
+⚙ Terraform Module (ví dụ tf/modules/s3_fe):
+module "frontend_bucket" {
+  source       = "./modules/s3_fe"
+  bucket_name  = var.bucket_name
+  oac_enabled  = true 
+}
+
+#### 🧱 CI/CD (GitHub Actions) cho FE:
+
+Sau khi npm run build, chạy aws s3 sync build/ s3://my-fe-bucket
+
+Gắn invalidation CloudFront nếu cần
+
+```
+# .github/workflows/deploy-fe.yaml
+jobs:
+  deploy_fe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm ci && npm run build
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-1
+      - run: aws s3 sync ./build s3://${{ secrets.S3_BUCKET_NAME }}/
+      - run: aws cloudfront create-invalidation --distribution-id <CF_ID> --paths "/*"
+
+```
+
+
+#### 🧱 API – ALB → ECS microservices (multi services)
+
+- 1 public ALB + listener 80/443
+- Path-based routing
+  - /api/rdm → target group RDM → ECS Fargate Task rdm
+  - /api/aegis → target group Aegis
+  - /api/moai → target group Moai
+
+- Mỗi ECS Service chạy trong private subnet, dùng riêng security group + IAM Task Role.
+- Ở alb module:
+
+```
+resource "aws_lb_listener_rule" "rdm" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 10
+  action { ... target_group_arn = aws_lb_target_group.rdm.arn }
+  condition { path_pattern { values = ["/api/rdm*"] } }
+}
+
+```
+
+#### 🧱 Blue-Green per Microservice – Architectural Upgrade
+
+- Nếu muốn blue-green deployment riêng từng service:
+
+- Option: Weighted Target Groups
+
+- Cho mỗi ECS service, ta tạo 2 target group: rdm-blue, rdm-green
+
+- CI/CD deploy image vào ECS green task → test
+
+- Sau test xong, dùng aws_lb_listener_rule để switch weight:
+  - 100% traffic → blue
+  - 0% → green (initial)
+
+- Sau khi verify: switch 100% → green
+
+- Terraform Cho Blue-Green ECS Service
+
+```
+resource "aws_lb_target_group" "rdm_blue" { ... }
+resource "aws_lb_target_group" "rdm_green" { ... }
+# ECS service rdm-blue, service rdm-green (desired count = 1 or 0)
+# Listener Rule Weight:
+resource "aws_lb_listener" "rdm_rule" {
+   default_action {
+      type             = "forward"
+      forward {
+         target_group {
+           arn   = aws_lb_target_group.rdm_blue.arn
+           weight = var.weight_blue
+         }
+         target_group {
+           arn   = aws_lb_target_group.rdm_green.arn
+           weight = var.weight_green
+         }
+      }
+   }
+}
+
+```
+
+#### 🧱 CI/CD GitHub Actions cho Backend (ECS):
+
+```
+name: Deploy Backend
+
+on:
+  push:
+    tags:
+      - 'v*'   # v1.0.0, v1.0.1
+
+jobs:
+  build-and-push:
+    ...
+    - run: docker build -t $ECR_REPO:$GITHUB_REF_NAME .
+    - run: docker push $ECR_REPO:$GITHUB_REF_NAME
+
+  deploy:
+    needs: build-and-push
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/configure-aws-credentials@v2
+      - run: aws ecs update-service --cluster rdm-green --service rdm-green --force-new-deployment
+      # hoặc dùng Terraform apply -var image_tag=${{ github.ref_name }}
+
+```
+
+
+### 🌐 CloudWatch + CloudTrail + CloudConfig Rules
+
+### 🔐 Secrets Manager rotation policies
+   
+
+
 
 
 
