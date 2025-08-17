@@ -26,16 +26,116 @@
 
 ## II. High-Level Architecture
 
-Provide a visual representation of:
+### 🌐 AWS Account Structuring Overview:
 
-- CI/CD Pipeline
-- Frontend (Static App on Nginx)
-- Backend (Java App on ECS)
-- RDS Database Tier
-- Messaging, Caching
-- VPC, Subnets, NAT, IGW, Transit Gateway
-- Monitoring & Logging
-- Security (IAM, SGs, Encryption)
+```
+AWS Organizations
+│
+├── Root Account
+│
+├── OU: Sandbox / Dev
+│   └── AWS Account: dev-account
+│
+├── OU: Non-Prod
+│   └── AWS Account: uat-account
+
+```
+
+- Dev Account: dùng bởi developers, ít hạn chế (nhưng vẫn theo IAM, guardrails)
+- UAT Account: kiểm thử trước khi lên Prod, tách biệt hoàn toàn khỏi Dev
+
+
+```
+terraform-aws/
+├── envs/
+│   ├── dev/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   ├── backend.tf (S3 bucket: dev-tf-state)
+│   │   └── provider.tf (assume role to dev AWS account)
+│   └── uat/
+│       ├── main.tf
+│       ├── variables.tf
+│       ├── backend.tf (bucket: uat-tf-state)
+│       └── provider.tf (assume role to uat AWS account)
+├── modules/
+│   ├── network-vpc/
+│   └── ecs/
+```
+
+### 🌐 Backend State per environment:
+
+envs/dev/backend.tf:
+
+```
+terraform {
+  backend "s3" {
+    bucket         = "dev-tf-state"
+    key            = "vpc/main.tfstate"
+    region         = "ap-southeast-1"
+    dynamodb_table = "dev-tf-lock"
+    encrypt        = true
+  }
+}
+
+```
+
+envs/uat/backend.tf:
+
+```
+terraform {
+  backend "s3" {
+    bucket         = "uat-tf-state"
+    key            = "vpc/main.tfstate"
+    region         = "ap-southeast-1"
+    dynamodb_table = "uat-tf-lock"
+    encrypt        = true
+  }
+}
+
+```
+
+### 🔁 Full Terraform Workflow Step-by-Step
+
+- Developer tạo feature branch feature/add-s3-bucket
+- Viết code trong module và folder envs/dev
+- Push lên GitHub -> mở Pull Request vào branch dev
+- CI Pipeline chạy:
+  - terraform init -backend-config=... (dev)
+  - terraform plan
+  - Upload terraform plan output vào PR comment (CI/CD)
+
+    ```
+    - name: Terraform Plan
+  id: plan
+  run: |
+    terraform plan -input=false -no-color > tfplan.txt
+
+- name: Upload Plan to PR Comment
+  uses: juliangruber/terraform-plan-commenter@v1.2.0
+  with:
+    plan: tfplan.txt
+    github_token: ${{ secrets.GITHUB_TOKEN }}
+    ```
+
+- Reviewer approve → Merge vào branch dev
+- CI của branch dev chạy terraform apply TỰ ĐỘNG lên môi trường DEV
+- Khi DEV stable → tạo PR từ dev → main
+- CI chạy plan cho môi trường UAT (envs/uat)
+- Approve & merge → CI branch main chạy terraform apply lên UAT
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ### 🌐 Full Flow Overview:
@@ -44,17 +144,21 @@ Provide a visual representation of:
 ```
 User (Internet)
     ↓
-Public NLB (port 80, in Public Subnet, Public SG)
+CloudFront CDN (HTTPS, custom domain + caching)
     ↓
-Private NGINX (reverse proxy on port 80 or 443, in Private Subnet, Private NGINX SG)
+S3 Static Website (Frontend React / FE assets)
     ↓
-Private NLB (target group listens on port 8080, in Private Subnet, Private NLB SG)
+Application Requests
     ↓
-ECS Task (App listens on port 8080, in Private Subnet, ECS Task SG)
+ALB (HTTP/HTTPS – public, gateway API routing)
     ↓
-Private DB (port 3306 or other, in Private Subnet, DB SG)
+ECS Service (Backend API in private subnet)
+    ↓
+RDS (private DB subnet, port 3306)
 
 ```
+
+
 
 ### 🔐 Security Group Rules Overview
 
@@ -67,15 +171,6 @@ Private DB (port 3306 or other, in Private Subnet, DB SG)
 
 ---
 
-#### 📌 Private NGINX Security Group
-
-| **Direction** | **Type** | **Port** | **Source/Destination** | **Purpose**                                      |
-|---------------|----------|----------|-------------------------|--------------------------------------------------|
-| Inbound       | HTTP     | 80       | Public NLB SG           | Accept traffic from Public NLB                   |
-| Inbound       | HTTPS    | 443      | Public NLB SG           | (Optional) Accept HTTPS from Public NLB          |
-| Outbound      | HTTP     | 8080     | Private NLB SG          | Forward to backend app via Private NLB           |
-
----
 
 #### 📌 Private NLB Security Group
 
@@ -101,8 +196,6 @@ Private DB (port 3306 or other, in Private Subnet, DB SG)
 |---------------|-------------|----------|-------------------------|--------------------------------------------------|
 | Inbound       | MySQL/Aurora| 3306     | ECS Task SG             | Accept DB queries from ECS task                  |
 | Outbound      | All         | All      | 0.0.0.0/0               | Allow system updates, DNS, etc.                  |
-
-
 
 
 
