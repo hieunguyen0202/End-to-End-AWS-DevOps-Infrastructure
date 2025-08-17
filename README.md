@@ -18,8 +18,7 @@
 
 - AWS Landing Zone
 
-![alt text](EndToEnd-AWSLandingZone.drawio.png)
-
+![alt text](EndToEnd-AWSLandingZone.drawio-1.png)
 
 - Architecture Diagram: (AWS-JAVA-3TIER)
 
