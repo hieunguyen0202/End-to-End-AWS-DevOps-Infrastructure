@@ -678,7 +678,223 @@ jobs:
 
 ### 🔐 Secrets Manager rotation policies
    
+#### 1️⃣ Tạo Secret trong Secrets Manager với Lambda rotation
 
+```
+# Secret lưu DB password
+resource "aws_secretsmanager_secret" "mysql_secret" {
+  name = "mysql-db-password"
+  description = "MySQL root password for RDM"
+  rotation_lambda_arn = aws_lambda_function.rotate_mysql_secret.arn
+
+  rotation_rules {
+    automatically_after_days = 30
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "mysql_secret_value" {
+  secret_id     = aws_secretsmanager_secret.mysql_secret.id
+  secret_string = jsonencode({
+    username = "admin"
+    password = "InitialPassword123"
+    host     = "mydb.cluster.amazonaws.com"
+  })
+}
+
+# Lambda role
+resource "aws_iam_role" "lambda_rotation_role" {
+  name = "rotation-lambda-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Effect = "Allow",
+      Principal = { Service = "lambda.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_rotation_basic" {
+  role       = aws_iam_role.lambda_rotation_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# Lambda rotation function (ví dụ MySQL rotation template)
+resource "aws_lambda_function" "rotate_mysql_secret" {
+  filename         = "lambda_rotation_mysql.zip"  # zip chứa code rotation
+  function_name    = "RotateMysqlSecret"
+  handler          = "index.handler"
+  runtime          = "python3.11"
+  role             = aws_iam_role.lambda_rotation_role.arn
+  timeout          = 60
+}
+
+```
+
+🔹 Lưu ý: lambda_rotation_mysql.zip là AWS cung cấp template rotation function cho MySQL.
+#### 2️⃣ ECS Task Role cho truy cập secret
+
+```
+resource "aws_iam_role" "ecs_task_role" {
+  name = "rdm-task-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Effect = "Allow",
+      Principal = { Service = "ecs-tasks.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "ecs_task_secret_policy" {
+  name = "ecs-task-secret-policy"
+  role = aws_iam_role.ecs_task_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Action = ["secretsmanager:GetSecretValue"],
+      Resource = aws_secretsmanager_secret.mysql_secret.arn
+    }]
+  })
+}
+
+```
+
+#### 3️⃣ ECS Task Definition với Secret
+
+```
+resource "aws_ecs_task_definition" "rdm_task" {
+  family                   = "rdm-task"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "512"
+  memory                   = "1024"
+  execution_role_arn       = aws_iam_role.ecs_task_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
+
+  container_definitions = jsonencode([{
+    name      = "rdm-container"
+    image     = "123456789012.dkr.ecr.ap-southeast-1.amazonaws.com/rdm:latest"
+    essential = true
+
+    environment = [
+      {
+        name  = "DB_HOST"
+        value = "mydb.cluster.amazonaws.com"
+      }
+    ]
+
+    secrets = [
+      {
+        name      = "DB_PASSWORD"
+        valueFrom = aws_secretsmanager_secret.mysql_secret.arn
+      }
+    ]
+
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        awslogs-group         = "/ecs/rdm"
+        awslogs-region        = "ap-southeast-1"
+        awslogs-stream-prefix = "ecs"
+      }
+    }
+  }])
+}
+
+```
+🔹 Lưu ý: DB_PASSWORD sẽ lấy trực tiếp từ Secrets Manager, không cần hardcode.
+#### 4️⃣ ECS Service
+```
+resource "aws_ecs_service" "rdm_service" {
+  name            = "rdm-service"
+  cluster         = aws_ecs_cluster.rdm_cluster.id
+  task_definition = aws_ecs_task_definition.rdm_task.arn
+  desired_count   = 2
+  launch_type     = "FARGATE"
+  network_configuration {
+    subnets         = ["subnet-xxxxxxx", "subnet-yyyyyyy"]
+    security_groups = ["sg-xxxxxxxx"]
+    assign_public_ip = true
+  }
+}
+```
+#### 5️⃣ Lambda + CloudWatch Event để redeploy ECS khi secret rotate
+
+```
+# Lambda role cho redeploy ECS
+resource "aws_iam_role" "ecs_redeploy_lambda_role" {
+  name = "ecs-redeploy-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Effect = "Allow",
+      Principal = { Service = "lambda.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "ecs_redeploy_lambda_policy" {
+  name = "ecs-redeploy-policy"
+  role = aws_iam_role.ecs_redeploy_lambda_role.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ecs:UpdateService",
+          "ecs:DescribeServices",
+          "ecs:DescribeTaskDefinition"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Lambda function redeploy ECS service
+resource "aws_lambda_function" "ecs_redeploy" {
+  filename         = "redeploy_ecs.zip" # zip chứa code Lambda
+  function_name    = "ECSRedeployOnSecretRotate"
+  handler          = "index.handler"
+  runtime          = "python3.11"
+  role             = aws_iam_role.ecs_redeploy_lambda_role.arn
+  timeout          = 60
+}
+
+# CloudWatch Event Rule trigger Lambda khi secret rotated
+resource "aws_cloudwatch_event_rule" "secret_rotate_rule" {
+  name        = "SecretRotateRule"
+  description = "Trigger ECS redeploy when secret rotation happens"
+  event_pattern = jsonencode({
+    "source": ["aws.secretsmanager"],
+    "detail-type": ["AWS API Call via CloudTrail"],
+    "detail": {
+      "eventName": ["RotateSecret"]
+    }
+  })
+}
+
+resource "aws_cloudwatch_event_target" "secret_rotate_target" {
+  rule      = aws_cloudwatch_event_rule.secret_rotate_rule.name
+  target_id = "ECSRedeployLambda"
+  arn       = aws_lambda_function.ecs_redeploy.arn
+}
+
+resource "aws_lambda_permission" "allow_cloudwatch_to_call" {
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.ecs_redeploy.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.secret_rotate_rule.arn
+}
+
+```
 
 
 
