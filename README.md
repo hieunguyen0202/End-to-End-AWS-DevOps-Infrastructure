@@ -199,6 +199,7 @@ CloudFront
 ```
 
 
+
 #### 🧱 Architecture:
 
 FE (React/Vue/NextJS build files) được build và upload lên S3.
@@ -526,6 +527,9 @@ resource "aws_ecs_service" "aegis_green_service" {
 
 
 
+
+
+
 #### 🧱 Blue-Green per Microservice – Architectural Upgrade
 
 - Nếu muốn blue-green deployment riêng từng service:
@@ -567,6 +571,79 @@ resource "aws_lb_listener" "rdm_rule" {
 
 ```
 
+
+#### 🌐  PHẦN 1 — Cấu trúc 2 GitHub Actions riêng
+.github/workflows/
+  ├── cicd-rdm.yml
+  └── cicd-aegis.yml
+
+#### 🌐  PHẦN 2 — Ví dụ GitHub Action cho rdm (kèm Blue/Green)
+
+```
+# .github/workflows/cicd-rdm.yml
+name: RDM CICD
+
+on:
+  push:
+    branches: [ main ]
+    paths: ["rdm/**"]        # chỉ build khi folder rdm có thay đổi
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-southeast-1.amazonaws.com/rdm:${{ github.sha }} ./rdm
+
+    - name: Login to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Push Docker image
+      run: |
+        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-southeast-1.amazonaws.com/rdm:${{ github.sha }}
+
+    - name: Blue/Green Deploy (Green == port 81)
+      run: |
+        # 1) Update ECS service task definition to use new image, deploy to GREEN TG
+        aws ecs update-service \
+          --cluster rdm-cluster \
+          --service rdm-green-svc \
+          --task-definition rdm-task:${{ github.sha }}
+
+        # 2) Wait until service stable
+        aws ecs wait services-stable \
+          --cluster rdm-cluster \
+          --services rdm-green-svc
+
+        echo "Green deployed to port 81: now manual or auto test..."
+
+    - name: Swap Traffic if test OK
+      if: ${{ github.event.inputs.swap == 'true' }}
+      run: |
+        # 3) Swap listener rules on ALB: port 80 => Green TG
+        aws elbv2 modify-listener \
+          --listener-arn arn:aws:elasticloadbalancing:...YOUR-LISTENER-ARN \
+          --default-actions Type=forward,TargetGroupArn=arn:aws:elasticloadbalancing:...GREEN-TG-ARN
+
+        # 4) Scale down Blue service to zero
+        aws ecs update-service \
+          --cluster rdm-cluster \
+          --service rdm-blue-svc \
+          --desired-count 0
+
+```
+
+- Giải thích logic:
+  - Luôn deploy image mới vào service “green” (port 81).
+  - Kiểm thử xong nếu OK, chạy step Swap Traffic để modify listener và scale service blue về 0.
+
+
+
 #### 🧱 CI/CD GitHub Actions cho Backend (ECS):
 
 ```
@@ -592,6 +669,9 @@ jobs:
       # hoặc dùng Terraform apply -var image_tag=${{ github.ref_name }}
 
 ```
+
+
+
 
 
 ### 🌐 CloudWatch + CloudTrail + CloudConfig Rules
