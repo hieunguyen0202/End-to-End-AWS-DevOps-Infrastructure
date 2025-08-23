@@ -1,0 +1,47 @@
+name: Terraform Plan (feature-dev)
+
+on:
+  pull_request:
+    branches:
+      - feature/dev   # only trigger when merging into feature/dev
+
+jobs:
+  terraform:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: terraform/envs/feature-dev
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.0   # adjust version if needed
+
+      - name: Terraform Init (dev backend)
+        run: |
+          terraform init \
+            -backend-config="backend-dev.conf"
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan -no-color -out=tfplan > plan_output.txt
+          echo "PLAN<<EOF" >> $GITHUB_ENV
+          cat plan_output.txt >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Comment PR with Plan
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: terraform-plan
+          message: |
+            ## Terraform Plan (feature-dev)
+            ```
+            ${{ env.PLAN }}
+            ```
