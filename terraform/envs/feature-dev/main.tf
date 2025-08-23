@@ -10,6 +10,7 @@ provider "aws" {
 }
 
 
+
 resource "aws_resourcegroups_group" "resourcegroups_group" {
   name = "${var.project}-resource-group"
 
