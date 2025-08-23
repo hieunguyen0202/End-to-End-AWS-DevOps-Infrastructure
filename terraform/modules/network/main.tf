@@ -321,6 +321,10 @@ resource "aws_cloudtrail" "app_audit_trail" {
 
 resource "aws_s3_bucket" "cloudtrail_logs" {
   bucket = "my-app-cloudtrail-logs-3435"
+
+  lifecycle {
+    prevent_destroy = true   # <-- prevents terraform destroy from killing logs
+  }
 }
 
 data "aws_iam_policy_document" "cloudtrail_s3" {
