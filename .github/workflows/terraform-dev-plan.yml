@@ -5,6 +5,10 @@ on:
     branches:
       - feature/dev   # only trigger when merging into feature/dev
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   terraform:
     name: Terraform Plan
@@ -13,6 +17,9 @@ jobs:
     defaults:
       run:
         working-directory: terraform/envs/feature-dev
+
+    env:
+      AWS_REGION: ap-southeast-1
 
     steps:
       - name: Checkout repository
@@ -23,10 +30,16 @@ jobs:
         with:
           terraform_version: 1.13.0   # adjust version if needed
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: Terraform Init (dev backend)
         run: |
-          terraform init \
-            -backend-config="backend-dev.conf"
+          terraform init
 
       - name: Terraform Plan
         id: plan
